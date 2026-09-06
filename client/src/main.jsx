@@ -1,14 +1,15 @@
 import React from "react";
+import ReactDOM from "react-dom/client";
 
-import ReactDOM
-    from "react-dom/client";
-
-import App
-    from "./App";
+import App from "./App";
 
 import {
     AuthProvider
 } from "./context/AuthContext";
+
+import {
+    PortfolioProvider
+} from "./context/PortfolioContext";
 
 import "./index.css";
 
@@ -21,7 +22,11 @@ ReactDOM.createRoot(
 
         <AuthProvider>
 
-            <App />
+            <PortfolioProvider>
+
+                <App />
+
+            </PortfolioProvider>
 
         </AuthProvider>
 

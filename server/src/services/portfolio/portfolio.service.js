@@ -2,16 +2,152 @@ import Portfolio from "../../models/portfolio.model.js";
 
 
 // ========================================
+// HELPER: CLEAN USERNAME
+// ========================================
+
+const makeUsernameBase = (value = "") => {
+
+    return value
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9_]/g, "")
+        .slice(0, 24);
+
+};
+
+
+// ========================================
+// HELPER: CLEAN SLUG
+// ========================================
+
+const makeSlugBase = (value = "") => {
+
+    return value
+        .toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 44);
+
+};
+
+
+// ========================================
+// GENERATE UNIQUE USERNAME
+// ========================================
+
+const generateUniqueUsername = async(
+    requestedUsername,
+    title,
+    userId
+) => {
+
+    let base =
+        makeUsernameBase(requestedUsername) ||
+        makeUsernameBase(title) ||
+        `user_${userId.toString().slice(-8)}`;
+
+    if (base.length < 3) {
+
+        base =
+            `user_${userId
+                .toString()
+                .slice(-8)}`;
+
+    }
+
+    let username = base;
+
+    let counter = 1;
+
+    while (
+        await Portfolio.exists({
+            username
+        })
+    ) {
+
+        const suffix = `_${counter}`;
+
+        username =
+            `${base.slice(
+                0,
+                30 - suffix.length
+            )}${suffix}`;
+
+        counter++;
+    }
+
+    return username;
+};
+
+
+// ========================================
+// GENERATE UNIQUE SLUG
+// ========================================
+
+const generateUniqueSlug = async(
+    requestedSlug,
+    username,
+    title
+) => {
+
+    let base =
+        makeSlugBase(requestedSlug) ||
+        makeSlugBase(username) ||
+        makeSlugBase(title) ||
+        "portfolio";
+
+    if (base.length < 3) {
+        base = "portfolio";
+    }
+
+    let slug = base;
+
+    let counter = 1;
+
+    while (
+        await Portfolio.exists({
+            slug
+        })
+    ) {
+
+        const suffix = `-${counter}`;
+
+        slug =
+            `${base.slice(
+                0,
+                50 - suffix.length
+            )}${suffix}`;
+
+        counter++;
+    }
+
+    return slug;
+};
+
+
+// ========================================
 // CREATE PORTFOLIO
 // ========================================
 
-const createPortfolio = async(userId, data) => {
+const createPortfolio = async(
+    userId,
+    data
+) => {
 
-    const existingPortfolio = await Portfolio.findOne({
-        owner: userId
-    });
+    // ====================================
+    // ONE PORTFOLIO PER USER
+    // ====================================
+
+    const existingPortfolio =
+        await Portfolio.findOne({
+            owner: userId
+        });
 
     if (existingPortfolio) {
+
         const error = new Error(
             "You already have a portfolio"
         );
@@ -22,83 +158,114 @@ const createPortfolio = async(userId, data) => {
     }
 
 
-    const existingUsername = await Portfolio.findOne({
-        username: data.username.toLowerCase()
-    });
+    // ====================================
+    // GENERATE USERNAME
+    // ====================================
 
-    if (existingUsername) {
-        const error = new Error(
-            "Username is already taken"
+    const username =
+        await generateUniqueUsername(
+            data.username,
+            data.title,
+            userId
         );
 
-        error.statusCode = 409;
 
-        throw error;
-    }
+    // ====================================
+    // GENERATE SLUG
+    // ====================================
 
-
-    const existingSlug = await Portfolio.findOne({
-        slug: data.slug.toLowerCase()
-    });
-
-    if (existingSlug) {
-        const error = new Error(
-            "Portfolio slug is already taken"
+    const slug =
+        await generateUniqueSlug(
+            data.slug,
+            username,
+            data.title
         );
 
-        error.statusCode = 409;
 
-        throw error;
-    }
+    // ====================================
+    // CREATE
+    // ====================================
 
+    const portfolio =
+        await Portfolio.create({
 
-    const portfolio = await Portfolio.create({
+            owner: userId,
 
-        owner: userId,
+            username,
 
-        username: data.username.toLowerCase(),
+            slug,
 
-        slug: data.slug.toLowerCase(),
+            title: data.title || "",
 
-        title: data.title || "",
+            headline: data.headline || "",
 
-        headline: data.headline || "",
+            bio: data.bio || "",
 
-        bio: data.bio || "",
+            profileImage: data.profileImage || "",
 
-        profileImage: data.profileImage || "",
+            location: data.location || "",
 
-        location: data.location || "",
+            email: data.email || "",
 
-        email: data.email || "",
+            phone: data.phone || "",
 
-        phone: data.phone || "",
+            github: data.github || "",
 
-        github: data.github || "",
+            linkedin: data.linkedin || "",
 
-        linkedin: data.linkedin || "",
+            twitter: data.twitter || "",
 
-        twitter: data.twitter || "",
+            instagram: data.instagram || "",
 
-        instagram: data.instagram || "",
+            youtube: data.youtube || "",
 
-        youtube: data.youtube || "",
+            website: data.website || "",
 
-        website: data.website || "",
+            resume: data.resume || {},
 
-        resume: data.resume || {},
+            theme: data.theme || "system",
 
-        theme: data.theme || "system",
+            template: data.template || "modern",
 
-        template: data.template || "modern",
+            customization: data.customization || {},
 
-        customization: data.customization || {},
+            showAboutSection: data.showAboutSection !== undefined ?
+                data.showAboutSection :
+                true,
 
-        seo: data.seo || {},
+            showContactSection: data.showContactSection !== undefined ?
+                data.showContactSection :
+                true,
 
-        isPublished: false
+            showProjectsSection: data.showProjectsSection !== undefined ?
+                data.showProjectsSection :
+                true,
 
-    });
+            showSkillsSection: data.showSkillsSection !== undefined ?
+                data.showSkillsSection :
+                true,
+
+            showExperienceSection: data.showExperienceSection !== undefined ?
+                data.showExperienceSection :
+                true,
+
+            showEducationSection: data.showEducationSection !== undefined ?
+                data.showEducationSection :
+                true,
+
+            showCertificatesSection: data.showCertificatesSection !== undefined ?
+                data.showCertificatesSection :
+                true,
+
+            showPostsSection: data.showPostsSection !== undefined ?
+                data.showPostsSection :
+                true,
+
+            seo: data.seo || {},
+
+            isPublished: false
+
+        });
 
 
     return portfolio;
@@ -109,14 +276,17 @@ const createPortfolio = async(userId, data) => {
 // GET MY PORTFOLIO
 // ========================================
 
-const getMyPortfolio = async(userId) => {
+const getMyPortfolio = async(
+    userId
+) => {
 
-    const portfolio = await Portfolio.findOne({
-        owner: userId
-    }).populate(
-        "owner",
-        "name email profileImage role"
-    );
+    const portfolio =
+        await Portfolio.findOne({
+            owner: userId
+        }).populate(
+            "owner",
+            "name email profileImage role"
+        );
 
 
     if (!portfolio) {
@@ -139,20 +309,23 @@ const getMyPortfolio = async(userId) => {
 // GET PUBLIC PORTFOLIO
 // ========================================
 
-const getPublicPortfolio = async(slug) => {
+const getPublicPortfolio = async(
+    slug
+) => {
 
-    const portfolio = await Portfolio.findOne({
+    const portfolio =
+        await Portfolio.findOne({
 
-        slug: slug.toLowerCase(),
+            slug: slug.toLowerCase(),
 
-        isPublished: true,
+            isPublished: true,
 
-        isActive: true
+            isActive: true
 
-    }).populate(
-        "owner",
-        "name profileImage"
-    );
+        }).populate(
+            "owner",
+            "name profileImage"
+        );
 
 
     if (!portfolio) {
@@ -180,9 +353,10 @@ const updatePortfolio = async(
     data
 ) => {
 
-    const portfolio = await Portfolio.findOne({
-        owner: userId
-    });
+    const portfolio =
+        await Portfolio.findOne({
+            owner: userId
+        });
 
 
     if (!portfolio) {
@@ -276,7 +450,7 @@ const updatePortfolio = async(
 
 
     // ====================================
-    // BASIC INFORMATION
+    // ALLOWED FIELDS
     // ====================================
 
     const allowedFields = [
@@ -285,6 +459,7 @@ const updatePortfolio = async(
         "headline",
         "bio",
         "profileImage",
+
         "location",
         "email",
         "phone",
@@ -303,6 +478,7 @@ const updatePortfolio = async(
 
         "customization",
 
+        "showAboutSection",
         "showContactSection",
         "showProjectsSection",
         "showSkillsSection",
@@ -316,7 +492,13 @@ const updatePortfolio = async(
     ];
 
 
-    for (const field of allowedFields) {
+    // ====================================
+    // UPDATE FIELDS
+    // ====================================
+
+    for (
+        const field of allowedFields
+    ) {
 
         if (
             data[field] !== undefined
@@ -340,11 +522,14 @@ const updatePortfolio = async(
 // PUBLISH PORTFOLIO
 // ========================================
 
-const publishPortfolio = async(userId) => {
+const publishPortfolio = async(
+    userId
+) => {
 
-    const portfolio = await Portfolio.findOne({
-        owner: userId
-    });
+    const portfolio =
+        await Portfolio.findOne({
+            owner: userId
+        });
 
 
     if (!portfolio) {
@@ -372,11 +557,14 @@ const publishPortfolio = async(userId) => {
 // UNPUBLISH PORTFOLIO
 // ========================================
 
-const unpublishPortfolio = async(userId) => {
+const unpublishPortfolio = async(
+    userId
+) => {
 
-    const portfolio = await Portfolio.findOne({
-        owner: userId
-    });
+    const portfolio =
+        await Portfolio.findOne({
+            owner: userId
+        });
 
 
     if (!portfolio) {
@@ -404,11 +592,14 @@ const unpublishPortfolio = async(userId) => {
 // DELETE PORTFOLIO
 // ========================================
 
-const deletePortfolio = async(userId) => {
+const deletePortfolio = async(
+    userId
+) => {
 
-    const portfolio = await Portfolio.findOne({
-        owner: userId
-    });
+    const portfolio =
+        await Portfolio.findOne({
+            owner: userId
+        });
 
 
     if (!portfolio) {
@@ -434,12 +625,24 @@ const deletePortfolio = async(userId) => {
 };
 
 
+// ========================================
+// EXPORT
+// ========================================
+
 export {
+
     createPortfolio,
+
     getMyPortfolio,
+
     getPublicPortfolio,
+
     updatePortfolio,
+
     publishPortfolio,
+
     unpublishPortfolio,
+
     deletePortfolio
+
 };

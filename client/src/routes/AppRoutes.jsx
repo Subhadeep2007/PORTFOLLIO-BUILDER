@@ -39,7 +39,8 @@ import ProtectedRoute
 import AdminRoute
     from "./AdminRoute";
 
-
+import PortfolioEditor
+    from "../pages/builder/PortfolioEditor";
 const AppRoutes = () => {
 
     return (
@@ -87,15 +88,19 @@ const AppRoutes = () => {
 
                 {/* ================= USER ================= */}
 
-                <Route element={<ProtectedRoute />}>
+<Route element={<ProtectedRoute />}>
 
-                    <Route
-                        path="/dashboard"
-                        element={<Dashboard />}
-                    />
+    <Route
+        path="/dashboard"
+        element={<Dashboard />}
+    />
 
-                </Route>
+    <Route
+        path="/dashboard/portfolio"
+        element={<PortfolioEditor />}
+    />
 
+</Route>
 
                 {/* ================= ADMIN ================= */}
 
