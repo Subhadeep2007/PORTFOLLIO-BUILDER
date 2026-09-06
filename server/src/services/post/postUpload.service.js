@@ -1,7 +1,6 @@
 import cloudinary
 from "../../config/cloudinary.js";
 
-
 // ========================================
 // UPLOAD POST MEDIA
 // ========================================
@@ -16,7 +15,12 @@ const uploadPostMedia = (
             reject
         ) => {
 
+            // ========================================
+            // FILE CHECK
+            // ========================================
+
             if (!file) {
+
                 reject(
                     new Error(
                         "No post media received"
@@ -27,24 +31,82 @@ const uploadPostMedia = (
             }
 
 
+            // ========================================
+            // MIME TYPE
+            // ========================================
+
+            const mimeType =
+                file.mimetype || "";
+
+
+            // ========================================
+            // RESOURCE TYPE
+            // ========================================
+
             let resourceType =
-                "image";
+                "raw";
+
+
+            // ========================================
+            // IMAGE
+            // ========================================
 
             if (
-                file.mimetype.startsWith(
+                mimeType.startsWith(
+                    "image/"
+                )
+            ) {
+
+                resourceType =
+                    "image";
+            }
+
+
+            // ========================================
+            // VIDEO
+            // ========================================
+            else if (
+                mimeType.startsWith(
                     "video/"
                 )
             ) {
+
                 resourceType =
                     "video";
             }
 
 
+            // ========================================
+            // AUDIO
+            // ========================================
+            else if (
+                mimeType.startsWith(
+                    "audio/"
+                )
+            ) {
+
+                resourceType =
+                    "video";
+            }
+
+
+            // ========================================
+            // UPLOAD STREAM
+            // ========================================
+
             const uploadStream =
-                cloudinary.uploader.upload_stream({
+                cloudinary.uploader.upload_stream(
+
+                    {
                         folder: "portfolio/posts",
 
-                        resource_type: resourceType
+                        resource_type: resourceType,
+
+                        use_filename: true,
+
+                        unique_filename: true,
+
+                        overwrite: false
                     },
 
                     (
@@ -52,14 +114,24 @@ const uploadPostMedia = (
                         result
                     ) => {
 
+                        // ========================================
+                        // CLOUDINARY ERROR
+                        // ========================================
+
                         if (error) {
+
                             reject(error);
 
                             return;
                         }
 
 
+                        // ========================================
+                        // RESULT CHECK
+                        // ========================================
+
                         if (!result) {
+
                             reject(
                                 new Error(
                                     "Post media upload failed"
@@ -70,17 +142,58 @@ const uploadPostMedia = (
                         }
 
 
-                        resolve(result);
+                        // ========================================
+                        // RESPONSE
+                        // ========================================
+
+                        resolve({
+
+                            url: result.secure_url,
+
+                            publicId: result.public_id,
+
+                            resourceType: result.resource_type,
+
+                            format: result.format,
+
+                            originalName: file.originalname,
+
+                            mimeType: file.mimetype,
+
+                            size: result.bytes ||
+                                file.size ||
+                                0,
+
+                            width: result.width ||
+                                null,
+
+                            height: result.height ||
+                                null,
+
+                            duration: result.duration ||
+                                null
+
+                        });
+
                     }
                 );
 
 
+            // ========================================
+            // SEND BUFFER
+            // ========================================
+
             uploadStream.end(
                 file.buffer
             );
+
         }
     );
 };
 
+
+// ========================================
+// EXPORT
+// ========================================
 
 export default uploadPostMedia;

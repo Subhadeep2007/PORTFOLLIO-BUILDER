@@ -104,17 +104,25 @@ const uploadMedia = async(
 
             data: {
 
-                url: result.secure_url,
+                url: result.url,
 
-                resourceType: result.resource_type,
+                publicId: result.publicId,
+
+                resourceType: result.resourceType,
 
                 format: result.format,
 
-                originalName: req.file.originalname,
+                originalName: result.originalName,
 
-                mimeType: req.file.mimetype,
+                mimeType: result.mimeType,
 
-                size: req.file.size
+                size: result.size,
+
+                width: result.width,
+
+                height: result.height,
+
+                duration: result.duration
 
             }
 

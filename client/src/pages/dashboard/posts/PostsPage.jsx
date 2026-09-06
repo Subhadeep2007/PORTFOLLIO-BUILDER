@@ -89,37 +89,56 @@ function normalizeArray(value) {
 
 function getMediaType(url) {
     if (!url) {
-        return "unknown";
+        return "file";
     }
 
     const cleanUrl = String(url)
         .split("?")[0]
+        .split("#")[0]
         .toLowerCase();
 
+    // Cloudinary resource type
     if (
-        /\.(mp4|webm|ogg|mov|avi|m4v|mkv)$/.test(
-            cleanUrl
-        )
+        cleanUrl.includes("/image/upload/")
+    ) {
+        return "image";
+    }
+
+    if (
+        cleanUrl.includes("/video/upload/")
     ) {
         return "video";
     }
 
     if (
-        /\.(jpg|jpeg|png|gif|webp|svg|avif|bmp|ico)$/.test(
+        cleanUrl.includes("/raw/upload/")
+    ) {
+        return "file";
+    }
+
+    // Normal image extensions
+    if (
+        /\.(jpg|jpeg|png|gif|webp|svg|avif|bmp|ico|tiff|tif)$/.test(
             cleanUrl
         )
     ) {
         return "image";
     }
 
+    // Normal video extensions
     if (
-        /\.pdf$/.test(cleanUrl)
+        /\.(mp4|webm|ogg|mov|avi|m4v|mkv|flv|wmv)$/.test(
+            cleanUrl
+        )
     ) {
-        return "pdf";
+        return "video";
     }
 
+    // Normal audio extensions
     if (
-        /\.(mp3|wav|ogg|aac|m4a)$/.test(cleanUrl)
+        /\.(mp3|wav|aac|m4a|flac|aiff)$/.test(
+            cleanUrl
+        )
     ) {
         return "audio";
     }
@@ -267,19 +286,16 @@ function PostForm({
         try {
             setUploading(true);
 
-            const response =
-                await uploadPostMedia(
-                    file
-                );
-
             const uploaded =
-                response?.data;
+    await uploadPostMedia(
+        file
+    );
 
-            if (!uploaded?.url) {
-                throw new Error(
-                    "Media upload failed. URL was not received."
-                );
-            }
+if (!uploaded || !uploaded.url) {
+    throw new Error(
+        "Media upload failed. URL was not received."
+    );
+}
 
             setForm(
                 (previous) => ({
@@ -295,6 +311,11 @@ function PostForm({
             // ========================================
 
             if (
+                uploaded.mimeType &&
+                uploaded.mimeType.startsWith("audio/")
+            ) {
+                setMediaType("audio");
+            } else if (
                 uploaded.resourceType ===
                 "video"
             ) {
@@ -1556,6 +1577,11 @@ function PostCard({
             post.coverImage
         );
 
+    const [
+        mediaFailed,
+        setMediaFailed
+    ] = useState(false);
+
     const tags =
         normalizeArray(
             post.tags
@@ -1581,164 +1607,318 @@ function PostCard({
         >
             {/* MEDIA */}
 
-            {post.coverImage ? (
-                <div
-                    className="
-                        relative
-                        overflow-hidden
-                        bg-black
-                    "
-                >
-                    {mediaType ===
-                    "video" ? (
-                        <video
-                            src={
-                                post.coverImage
-                            }
-                            controls
-                            preload="metadata"
-                            className="
-                                h-64
-                                w-full
-                                object-contain
-                                bg-black
-                            "
-                        />
-                    ) : mediaType ===
-                      "image" ? (
-                        <img
-                            src={
-                                post.coverImage
-                            }
-                            alt={
-                                post.title ||
-                                "Post"
-                            }
-                            className="
-                                h-64
-                                w-full
-                                object-cover
-                            "
-                        />
-                    ) : mediaType ===
-                      "audio" ? (
-                        <div
-                            className="
-                                flex
-                                h-64
-                                flex-col
-                                items-center
-                                justify-center
-                                gap-4
-                                bg-[#0b1728]
-                                px-5
-                            "
-                        >
-                            <div className="text-5xl">
-                                🎵
-                            </div>
+    {post.coverImage ? (
+        <div className="border-b border-white/10">
 
-                            <audio
-                                src={
-                                    post.coverImage
-                                }
-                                controls
-                                className="w-full"
-                            />
-                        </div>
-                    ) : (
-                        <div
-                            className="
-                                flex
-                                h-64
-                                flex-col
-                                items-center
-                                justify-center
-                                gap-4
-                                bg-[#0b1728]
-                                px-5
-                                text-center
-                            "
-                        >
-                            <div className="text-5xl">
-                                {getMediaIcon(
-                                    mediaType
-                                )}
-                            </div>
-
-                            <p
-                                className="
-                                    text-sm
-                                    text-slate-300
-                                "
-                            >
-                                Attached file
-                            </p>
-
-                            <a
-                                href={
-                                    post.coverImage
-                                }
-                                target="_blank"
-                                rel="noreferrer"
-                                className="
-                                    rounded-lg
-                                    border
-                                    border-cyan-400/20
-                                    bg-cyan-400/10
-                                    px-4
-                                    py-2
-                                    text-xs
-                                    font-medium
-                                    text-cyan-300
-                                    hover:bg-cyan-400/20
-                                "
-                            >
-                                Open File
-                            </a>
-                        </div>
-                    )}
-
-                    {/* FEATURED BADGE */}
-
-                    {post.isFeatured ? (
-                        <span
-                            className="
-                                absolute
-                                left-3
-                                top-3
-                                rounded-full
-                                border
-                                border-amber-300/20
-                                bg-amber-300/10
-                                px-3
-                                py-1
-                                text-xs
-                                font-medium
-                                text-amber-300
-                                backdrop-blur
-                            "
-                        >
-                            ⭐ Featured
-                        </span>
-                    ) : null}
-                </div>
-            ) : (
+            {mediaFailed ? (
                 <div
                     className="
                         flex
-                        h-48
                         items-center
-                        justify-center
-                        bg-cyan-400/[0.03]
-                        text-5xl
+                        justify-between
+                        gap-4
+                        bg-[#0b1728]
+                        px-4
+                        py-4
                     "
                 >
-                    📝
+                    <div
+                        className="
+                            flex
+                            min-w-0
+                            items-center
+                            gap-3
+                        "
+                    >
+                        <div
+                            className="
+                                flex
+                                h-11
+                                w-11
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-xl
+                                border
+                                border-cyan-400/20
+                                bg-cyan-400/10
+                                text-xl
+                            "
+                        >
+                            {getMediaIcon(
+                                mediaType
+                            )}
+                        </div>
+
+                        <div className="min-w-0">
+                            <p
+                                className="
+                                    text-sm
+                                    font-medium
+                                    text-white
+                                "
+                            >
+                                Attached File
+                            </p>
+
+                            <p
+                                className="
+                                    mt-0.5
+                                    truncate
+                                    text-xs
+                                    text-slate-500
+                                "
+                            >
+                                Preview unavailable
+                            </p>
+                        </div>
+                    </div>
+
+                    <a
+                        href={
+                            post.coverImage
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="
+                            shrink-0
+                            rounded-lg
+                            bg-cyan-400
+                            px-3
+                            py-2
+                            text-xs
+                            font-semibold
+                            text-slate-950
+                            hover:bg-cyan-300
+                        "
+                    >
+                        Open File ↗
+                    </a>
+                </div>
+            ) : mediaType === "image" ? (
+
+                <img
+                    src={
+                        post.coverImage
+                    }
+                    alt={
+                        post.title ||
+                        "Post"
+                    }
+                    className="
+                        block
+                        h-52
+                        w-full
+                        object-cover
+                    "
+                    onError={() => {
+                        setMediaFailed(true);
+                    }}
+                />
+
+            ) : mediaType === "video" ? (
+
+                <div
+                    className="
+                        flex
+                        h-52
+                        w-full
+                        items-center
+                        justify-center
+                        bg-black
+                    "
+                >
+                    <video
+                        src={
+                            post.coverImage
+                        }
+                        controls
+                        preload="metadata"
+                        className="
+                            h-52
+                            w-full
+                            bg-black
+                            object-contain
+                        "
+                        onError={() => {
+                            setMediaFailed(true);
+                        }}
+                    />
+                </div>
+
+            ) : mediaType === "audio" ? (
+
+                <div
+                    className="
+                        flex
+                        items-center
+                        gap-4
+                        bg-[#0b1728]
+                        px-4
+                        py-5
+                    "
+                >
+                    <div
+                        className="
+                            flex
+                            h-11
+                            w-11
+                            shrink-0
+                            items-center
+                            justify-center
+                            rounded-xl
+                            border
+                            border-cyan-400/20
+                            bg-cyan-400/10
+                            text-xl
+                        "
+                    >
+                        🎵
+                    </div>
+
+                    <audio
+                        src={
+                            post.coverImage
+                        }
+                        controls
+                        className="min-w-0 flex-1"
+                        onError={() => {
+                            setMediaFailed(true);
+                        }}
+                    />
+
+                    <a
+                        href={
+                            post.coverImage
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="
+                            shrink-0
+                            rounded-lg
+                            border
+                            border-white/10
+                            px-3
+                            py-2
+                            text-xs
+                            text-slate-300
+                            hover:bg-white/5
+                        "
+                    >
+                        Open ↗
+                    </a>
+                </div>
+
+            ) : (
+
+                <div
+                    className="
+                        flex
+                        items-center
+                        justify-between
+                        gap-4
+                        bg-[#0b1728]
+                        px-4
+                        py-4
+                    "
+                >
+                    <div
+                        className="
+                            flex
+                            min-w-0
+                            items-center
+                            gap-3
+                        "
+                    >
+                        <div
+                            className="
+                                flex
+                                h-11
+                                w-11
+                                shrink-0
+                                items-center
+                                justify-center
+                                rounded-xl
+                                border
+                                border-cyan-400/20
+                                bg-cyan-400/10
+                                text-xl
+                            "
+                        >
+                            📎
+                        </div>
+
+                        <div className="min-w-0">
+                            <p
+                                className="
+                                    text-sm
+                                    font-medium
+                                    text-white
+                                "
+                            >
+                                Attached File
+                            </p>
+
+                            <p
+                                className="
+                                    mt-0.5
+                                    text-xs
+                                    text-slate-500
+                                "
+                            >
+                                Click to open the file
+                            </p>
+                        </div>
+                    </div>
+
+                    <a
+                        href={
+                            post.coverImage
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="
+                            shrink-0
+                            rounded-lg
+                            bg-cyan-400
+                            px-3
+                            py-2
+                            text-xs
+                            font-semibold
+                            text-slate-950
+                            hover:bg-cyan-300
+                        "
+                    >
+                        Open File ↗
+                    </a>
                 </div>
             )}
 
-            {/* BODY */}
+            {post.isFeatured ? (
+                <span
+                    className="
+                        absolute
+                        left-3
+                        top-3
+                        rounded-full
+                        border
+                        border-amber-300/20
+                        bg-amber-300/10
+                        px-3
+                        py-1
+                        text-xs
+                        font-medium
+                        text-amber-300
+                        backdrop-blur
+                    "
+                >
+                    ⭐ Featured
+                </span>
+            ) : null}
+        </div>
+    ) : null}
+
+    {/* BODY */}
 
             <div className="p-5">
                 <div
@@ -1994,11 +2174,11 @@ function PostCard({
                     "
                 >
                     <span>
-                        👁 {post.views ?? 0} views
+                        👁 {post.views || 0} views
                     </span>
 
                     <span>
-                        Order {post.order ?? 0}
+                        Order {post.order || 0}
                     </span>
                 </div>
 
@@ -2255,7 +2435,7 @@ export default function PostsPage() {
                 Math.max(
                     0,
                     Number(
-                        post.order ?? 0
+                        post.order || 0
                     ) || 0
                 )
         });

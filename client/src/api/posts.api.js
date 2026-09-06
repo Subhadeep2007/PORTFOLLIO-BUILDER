@@ -131,30 +131,36 @@ export const incrementPostViews =
             );
 
         return response.data;
-    };
-
-
-// ========================================
-// UPLOAD IMAGE / VIDEO
+    }; // ========================================
+// UPLOAD POST MEDIA
 // ========================================
 
-export const uploadPostMedia = async(file) => {
-    if (!file) {
-        throw new Error("Please select a file");
-    }
+export const uploadPostMedia =
+    async(file) => {
 
-    const formData = new FormData();
-
-    formData.append("media", file);
-
-    const response = await api.post(
-        "/posts/upload",
-        formData, {
-            headers: {
-                "Content-Type": "multipart/form-data"
-            }
+        if (!file) {
+            throw new Error(
+                "Please select a file"
+            );
         }
-    );
 
-    return response.data;
-};
+        const formData =
+            new FormData();
+
+        formData.append(
+            "media",
+            file
+        );
+
+        const response =
+            await api.post(
+                "/posts/upload",
+                formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
+            );
+
+        return response.data.data;
+    };
