@@ -1027,14 +1027,6 @@ const PortfolioEditor = () => {
                             </span>
 
 
-                            <Link
-                                to="/dashboard/preview"
-                                className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm text-slate-300 transition hover:border-cyan-400/30 hover:text-cyan-300"
-                            >
-                                Preview
-                            </Link>
-
-
                             <button
                                 type="button"
                                 onClick={handleSave}
