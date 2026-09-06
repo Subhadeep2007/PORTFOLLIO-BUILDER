@@ -41,6 +41,14 @@ import AdminRoute
 
 import PortfolioEditor
     from "../pages/builder/PortfolioEditor";
+import ProjectsPage from "../pages/dashboard/projects/ProjectsPage";
+import SkillsPage
+    from "../pages/dashboard/skills/SkillsPage";
+    import ExperiencePage
+    from "../pages/dashboard/experience/ExperiencePage";
+    import EducationPage from "../pages/dashboard/education/EducationPage";
+    import CertificatesPage
+    from "../pages/dashboard/certificates/CertificatesPage";
 const AppRoutes = () => {
 
     return (
@@ -99,7 +107,26 @@ const AppRoutes = () => {
         path="/dashboard/portfolio"
         element={<PortfolioEditor />}
     />
-
+    <Route
+    path="/dashboard/projects"
+    element={<ProjectsPage />}
+/>
+<Route
+    path="/dashboard/skills"
+    element={<SkillsPage />}
+/>
+<Route
+    path="/dashboard/experience"
+    element={<ExperiencePage />}
+/>
+<Route
+    path="/dashboard/education"
+    element={<EducationPage />}
+/>
+<Route
+    path="/dashboard/certificates"
+    element={<CertificatesPage />}
+/>
 </Route>
 
                 {/* ================= ADMIN ================= */}

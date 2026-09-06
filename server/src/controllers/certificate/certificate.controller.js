@@ -7,7 +7,8 @@ import {
     toggleCertificatePublished
 } from "../../services/certificate/certificate.service.js";
 
-
+import uploadCertificateFile
+from "../../services/certificate/certificateUpload.service.js";
 // ========================================
 // CREATE CERTIFICATE
 // ========================================
@@ -39,7 +40,60 @@ const create = async(req, res, next) => {
     }
 };
 
+// ========================================
+// UPLOAD CERTIFICATE FILE
+// ========================================
 
+const uploadFile = async(
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        if (!req.file) {
+
+            const error =
+                new Error(
+                    "Certificate file is required"
+                );
+
+            error.statusCode = 400;
+
+            throw error;
+        }
+
+
+        const result =
+            await uploadCertificateFile(
+                req.file
+            );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: "Certificate file uploaded successfully",
+
+            data: {
+                url: result.secure_url,
+
+                fileName: req.file.originalname,
+
+                mimeType: req.file.mimetype,
+
+                size: req.file.size
+            }
+
+        });
+
+    } catch (error) {
+
+        next(error);
+    }
+};
 // ========================================
 // GET MY CERTIFICATES
 // ========================================
@@ -199,8 +253,7 @@ const togglePublished = async(
             success: true,
 
             message: certificate.isPublished ?
-                "Certificate published successfully" :
-                "Certificate unpublished successfully",
+                "Certificate published successfully" : "Certificate unpublished successfully",
 
             data: certificate
 
@@ -221,6 +274,7 @@ export {
     getOne,
     update,
     remove,
-    togglePublished
+    togglePublished,
+    uploadFile
 
 };

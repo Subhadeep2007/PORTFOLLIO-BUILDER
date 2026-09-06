@@ -1,30 +1,32 @@
 import express from "express";
 
 import {
-
     create,
     getMy,
     getOne,
     update,
     remove,
-    togglePublished
-
+    togglePublished,
+    uploadFile
 } from "../controllers/certificate/certificate.controller.js";
 
+import authMiddleware
+from "../middleware/auth.middleware.js";
 
-import authMiddleware from "../middleware/auth.middleware.js";
-
-import validate from "../middleware/validate.middleware.js";
+import validate
+from "../middleware/validate.middleware.js";
 
 import {
-
     createCertificateSchema,
     updateCertificateSchema
-
 } from "../validators/certificate.validator.js";
 
+import certificateUpload
+from "../middleware/certificateUpload.middleware.js";
 
-const router = express.Router();
+
+const router =
+    express.Router();
 
 
 // ========================================
@@ -40,7 +42,21 @@ router.post(
 
 
 // ========================================
-// GET MY CERTIFICATES
+// FILE UPLOAD
+// ========================================
+
+router.post(
+    "/upload",
+    authMiddleware,
+    certificateUpload.single(
+        "certificate"
+    ),
+    uploadFile
+);
+
+
+// ========================================
+// GET MY
 // ========================================
 
 router.get(
