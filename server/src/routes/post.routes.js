@@ -8,20 +8,27 @@ import {
     remove,
     togglePublished,
     toggleFeatured,
-    incrementViews
+    incrementViews,
+    uploadMedia
 } from "../controllers/post/post.controller.js";
 
-import authMiddleware from "../middleware/auth.middleware.js";
+import authMiddleware
+from "../middleware/auth.middleware.js";
 
-import validate from "../middleware/validate.middleware.js";
+import validate
+from "../middleware/validate.middleware.js";
 
 import {
     createPostSchema,
     updatePostSchema
 } from "../validators/post.validator.js";
 
+import postUpload
+from "../middleware/postUpload.middleware.js";
 
-const router = express.Router();
+
+const router =
+    express.Router();
 
 
 // ========================================
@@ -33,6 +40,19 @@ router.post(
     authMiddleware,
     validate(createPostSchema),
     create
+);
+
+
+// ========================================
+// UPLOAD POST MEDIA
+// MUST COME BEFORE /:postId
+// ========================================
+
+router.post(
+    "/upload",
+    authMiddleware,
+    postUpload.single("media"),
+    uploadMedia
 );
 
 

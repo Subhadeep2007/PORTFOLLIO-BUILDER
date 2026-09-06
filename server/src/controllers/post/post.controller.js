@@ -8,7 +8,8 @@ import {
     togglePostFeatured,
     incrementPostViews
 } from "../../services/post/post.service.js";
-
+import uploadPostMedia
+from "../../services/post/postUpload.service.js";
 
 // ========================================
 // CREATE POST
@@ -45,7 +46,91 @@ const create = async(
     }
 };
 
+// ========================================
+// UPLOAD POST MEDIA
+// ========================================
 
+// ========================================
+// UPLOAD POST MEDIA
+// ========================================
+
+const uploadMedia = async(
+    req,
+    res,
+    next
+) => {
+
+    try {
+
+        console.log(
+            "UPLOAD REQUEST RECEIVED"
+        );
+
+        console.log(
+            "REQ FILE:",
+            req.file
+        );
+
+        console.log(
+            "REQ BODY:",
+            req.body
+        );
+
+
+        if (!req.file) {
+
+            const error =
+                new Error(
+                    "Post file was not received by server"
+                );
+
+            error.statusCode = 400;
+
+            throw error;
+        }
+
+
+        const result =
+            await uploadPostMedia(
+                req.file
+            );
+
+
+        return res.status(200).json({
+
+            success: true,
+
+            message: "Post media uploaded successfully",
+
+            data: {
+
+                url: result.secure_url,
+
+                resourceType: result.resource_type,
+
+                format: result.format,
+
+                originalName: req.file.originalname,
+
+                mimeType: req.file.mimetype,
+
+                size: req.file.size
+
+            }
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "POST MEDIA UPLOAD ERROR:",
+            error
+        );
+
+        next(error);
+
+    }
+};
 // ========================================
 // GET MY POSTS
 // ========================================
@@ -221,8 +306,7 @@ const togglePublished = async(
             success: true,
 
             message: post.isPublished ?
-                "Post published successfully" :
-                "Post unpublished successfully",
+                "Post published successfully" : "Post unpublished successfully",
 
             data: post
 
@@ -262,8 +346,7 @@ const toggleFeatured = async(
             success: true,
 
             message: post.isFeatured ?
-                "Post featured successfully" :
-                "Post unfeatured successfully",
+                "Post featured successfully" : "Post unfeatured successfully",
 
             data: post
 
@@ -325,6 +408,7 @@ export {
     remove,
     togglePublished,
     toggleFeatured,
-    incrementViews
+    incrementViews,
+    uploadMedia
 
 };

@@ -49,6 +49,8 @@ import SkillsPage
     import EducationPage from "../pages/dashboard/education/EducationPage";
     import CertificatesPage
     from "../pages/dashboard/certificates/CertificatesPage";
+    import PostsPage
+    from "../pages/dashboard/posts/PostsPage";
 const AppRoutes = () => {
 
     return (
@@ -126,6 +128,10 @@ const AppRoutes = () => {
 <Route
     path="/dashboard/certificates"
     element={<CertificatesPage />}
+/>
+<Route
+    path="/dashboard/posts"
+    element={<PostsPage />}
 />
 </Route>
 
