@@ -1,45 +1,97 @@
 import express from "express";
 
+
 import {
+
     register,
+
+    adminRegister,
+
     verifyEmail,
+
     resendVerificationOTP,
+
     login,
+
+    adminLogin,
+
     refreshToken,
+
     logout,
+
     forgotPasswordController,
+
     resetPasswordController,
+
     changePasswordController
+
 } from "../controllers/auth/auth.controller.js";
 
+
 import {
+
     registerSchema,
+
     verifyEmailSchema,
+
     resendVerificationSchema,
+
     loginSchema,
+
     forgotPasswordSchema,
+
     resetPasswordSchema,
+
     changePasswordSchema
+
 } from "../validators/auth.validator.js";
 
-import validate from "../middleware/validate.middleware.js";
 
-import authMiddleware from "../middleware/auth.middleware.js";
-
-import authRateLimiter from "../middleware/rateLimit.middleware.js";
+import validate
+from "../middleware/validate.middleware.js";
 
 
-const router = express.Router();
+import authMiddleware
+from "../middleware/auth.middleware.js";
+
+
+import authRateLimiter
+from "../middleware/rateLimit.middleware.js";
+
+
+const router =
+    express.Router();
 
 
 // ========================================
-// REGISTER
+// USER REGISTER
 // ========================================
 
 router.post(
+
     "/register",
+
     validate(registerSchema),
+
     register
+
+);
+
+
+// ========================================
+// ADMIN REGISTER
+// ========================================
+
+router.post(
+
+    "/admin/register",
+
+    authRateLimiter,
+
+    validate(registerSchema),
+
+    adminRegister
+
 );
 
 
@@ -48,10 +100,15 @@ router.post(
 // ========================================
 
 router.post(
+
     "/verify-email",
+
     authRateLimiter,
+
     validate(verifyEmailSchema),
+
     verifyEmail
+
 );
 
 
@@ -60,22 +117,49 @@ router.post(
 // ========================================
 
 router.post(
+
     "/resend-verification",
+
     authRateLimiter,
+
     validate(resendVerificationSchema),
+
     resendVerificationOTP
+
 );
 
 
 // ========================================
-// LOGIN
+// USER LOGIN
 // ========================================
 
 router.post(
+
     "/login",
+
     authRateLimiter,
+
     validate(loginSchema),
+
     login
+
+);
+
+
+// ========================================
+// ADMIN LOGIN
+// ========================================
+
+router.post(
+
+    "/admin/login",
+
+    authRateLimiter,
+
+    validate(loginSchema),
+
+    adminLogin
+
 );
 
 
@@ -84,8 +168,11 @@ router.post(
 // ========================================
 
 router.post(
+
     "/refresh-token",
+
     refreshToken
+
 );
 
 
@@ -94,8 +181,11 @@ router.post(
 // ========================================
 
 router.post(
+
     "/logout",
+
     logout
+
 );
 
 
@@ -104,10 +194,15 @@ router.post(
 // ========================================
 
 router.post(
+
     "/forgot-password",
+
     authRateLimiter,
+
     validate(forgotPasswordSchema),
+
     forgotPasswordController
+
 );
 
 
@@ -116,10 +211,15 @@ router.post(
 // ========================================
 
 router.post(
+
     "/reset-password",
+
     authRateLimiter,
+
     validate(resetPasswordSchema),
+
     resetPasswordController
+
 );
 
 
@@ -128,10 +228,15 @@ router.post(
 // ========================================
 
 router.post(
+
     "/change-password",
+
     authMiddleware,
+
     validate(changePasswordSchema),
+
     changePasswordController
+
 );
 
 

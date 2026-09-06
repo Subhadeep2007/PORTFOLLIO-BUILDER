@@ -1,122 +1,176 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
 
-    // ========================================
-    // BASIC USER INFORMATION
-    // ========================================
+const userSchema =
+    new mongoose.Schema({
 
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-        minlength: 2,
-        maxlength: 50
-    },
+        // ========================================
+        // BASIC USER INFORMATION
+        // ========================================
 
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        lowercase: true,
-        trim: true
-    },
+        name: {
 
-    password: {
-        type: String,
-        required: true,
-        minlength: 8
-    },
+            type: String,
+
+            required: true,
+
+            trim: true,
+
+            minlength: 2,
+
+            maxlength: 50
+
+        },
 
 
-    // ========================================
-    // PROFILE
-    // ========================================
+        email: {
 
-    profileImage: {
-        type: String,
-        default: ""
-    },
+            type: String,
 
+            required: true,
 
-    // ========================================
-    // EMAIL VERIFICATION
-    // ========================================
+            unique: true,
 
-    isEmailVerified: {
-        type: Boolean,
-        default: false
-    },
+            lowercase: true,
 
-    emailVerificationOTP: {
-        type: String,
-        default: null
-    },
+            trim: true
 
-    emailVerificationOTPExpire: {
-        type: Date,
-        default: null
-    },
+        },
 
 
-    // ========================================
-    // PASSWORD RESET
-    // ========================================
+        password: {
 
-    resetPasswordOTP: {
-        type: String,
-        default: null
-    },
+            type: String,
 
-    resetPasswordOTPExpire: {
-        type: Date,
-        default: null
-    },
+            required: true,
+
+            minlength: 8
+
+        },
 
 
-    // ========================================
-    // REFRESH TOKEN
-    // ========================================
+        // ========================================
+        // PROFILE
+        // ========================================
 
-    refreshToken: {
-        type: String,
-        default: null
-    },
+        profileImage: {
 
+            type: String,
 
-    // ========================================
-    // ROLE
-    // ========================================
+            default: ""
 
-    role: {
-        type: String,
-        enum: ["user", "admin"],
-        default: "user"
-    },
+        },
 
 
-    // ========================================
-    // ACCOUNT STATUS
-    // ========================================
+        // ========================================
+        // EMAIL VERIFICATION
+        // ========================================
 
-    isActive: {
-        type: Boolean,
-        default: true
-    },
+        isEmailVerified: {
 
-    lastSeen: {
-        type: Date,
-        default: null
-    }
+            type: Boolean,
 
-}, {
-    timestamps: true
-});
+            default: false
+
+        },
+
+
+        emailVerificationOTP: {
+
+            type: String,
+
+            default: null
+
+        },
+
+
+        emailVerificationOTPExpire: {
+
+            type: Date,
+
+            default: null
+
+        },
+
+
+        // ========================================
+        // PASSWORD RESET
+        // ========================================
+
+        resetPasswordOTP: {
+
+            type: String,
+
+            default: null
+
+        },
+
+
+        resetPasswordOTPExpire: {
+
+            type: Date,
+
+            default: null
+
+        },
+
+
+        // ========================================
+        // REFRESH TOKEN
+        // ========================================
+
+        refreshToken: {
+
+            type: String,
+
+            default: null
+
+        },
+
+
+        // ========================================
+        // ROLE
+        // ========================================
+
+        role: {
+
+            type: String,
+
+            enum: [
+                "user",
+                "admin"
+            ],
+
+            default: "user"
+
+        },
+
+
+        // ========================================
+        // ACCOUNT STATUS
+        // ========================================
+
+        isActive: {
+
+            type: Boolean,
+
+            default: true
+
+        }
+
+    }, {
+
+        timestamps: true
+
+    });
 
 
 const User =
     mongoose.models.User ||
-    mongoose.model("User", userSchema);
+    mongoose.model(
+        "User",
+        userSchema
+    );
 
 
 export default User;

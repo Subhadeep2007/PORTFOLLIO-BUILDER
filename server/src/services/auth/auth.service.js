@@ -3,26 +3,171 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 import User from "../../models/user.model.js";
+import sendEmail from "../../utils/sendEmail.js";
 
+/* =========================================================
+   COMMON HELPERS
+========================================================= */
 
-// ========================================
-// HELPER FUNCTIONS
-// ========================================
+const createError = (message, statusCode = 400) => {
+    const error = new Error(message);
+    error.statusCode = statusCode;
+    return error;
+};
 
+/* =========================================================
+   OTP
+========================================================= */
 
-// Generate OTP
 const generateOTP = () => {
-
     return crypto
         .randomInt(100000, 1000000)
         .toString();
-
 };
 
+/* =========================================================
+   ADMIN SECRET CHECK
+========================================================= */
 
-// Generate Access Token
+const isValidAdminSecret = (providedSecret) => {
+    const expectedSecret = process.env.ADMIN_SECRET_KEY;
+
+    if (!providedSecret || !expectedSecret) {
+        return false;
+    }
+
+    const providedBuffer = Buffer.from(providedSecret);
+    const expectedBuffer = Buffer.from(expectedSecret);
+
+    if (providedBuffer.length !== expectedBuffer.length) {
+        return false;
+    }
+
+    return crypto.timingSafeEqual(
+        providedBuffer,
+        expectedBuffer
+    );
+};
+
+/* =========================================================
+   EMAIL HELPERS
+========================================================= */
+
+const sendVerificationOTP = async(email, otp) => {
+    return sendEmail({
+        to: email,
+        subject: "Verify Your Portfolio Builder Account",
+        html: `
+            <div style="
+                font-family: Arial, sans-serif;
+                background:#07111f;
+                color:#ffffff;
+                padding:40px;
+                max-width:600px;
+                margin:auto;
+                border-radius:16px;
+            ">
+                <h2 style="
+                    color:#22d3ee;
+                    margin-bottom:20px;
+                ">
+                    Portfolio Builder
+                </h2>
+
+                <p style="font-size:16px;">
+                    Your email verification OTP is:
+                </p>
+
+                <div style="
+                    font-size:32px;
+                    font-weight:bold;
+                    letter-spacing:8px;
+                    color:#22d3ee;
+                    background:#0f1d30;
+                    padding:18px;
+                    text-align:center;
+                    border-radius:12px;
+                    margin:25px 0;
+                ">
+                    ${otp}
+                </div>
+
+                <p style="color:#cbd5e1;">
+                    This OTP is valid for 10 minutes.
+                </p>
+
+                <p style="
+                    color:#64748b;
+                    font-size:13px;
+                    margin-top:30px;
+                ">
+                    If you did not create this account, you can safely ignore this email.
+                </p>
+            </div>
+        `
+    });
+};
+
+const sendPasswordResetOTP = async(email, otp) => {
+    return sendEmail({
+        to: email,
+        subject: "Portfolio Builder Password Reset OTP",
+        html: `
+            <div style="
+                font-family: Arial, sans-serif;
+                background:#07111f;
+                color:#ffffff;
+                padding:40px;
+                max-width:600px;
+                margin:auto;
+                border-radius:16px;
+            ">
+                <h2 style="
+                    color:#22d3ee;
+                    margin-bottom:20px;
+                ">
+                    Portfolio Builder
+                </h2>
+
+                <p style="font-size:16px;">
+                    Use the OTP below to reset your password:
+                </p>
+
+                <div style="
+                    font-size:32px;
+                    font-weight:bold;
+                    letter-spacing:8px;
+                    color:#22d3ee;
+                    background:#0f1d30;
+                    padding:18px;
+                    text-align:center;
+                    border-radius:12px;
+                    margin:25px 0;
+                ">
+                    ${otp}
+                </div>
+
+                <p style="color:#cbd5e1;">
+                    This OTP is valid for 10 minutes.
+                </p>
+
+                <p style="
+                    color:#64748b;
+                    font-size:13px;
+                    margin-top:30px;
+                ">
+                    If you did not request a password reset, ignore this email.
+                </p>
+            </div>
+        `
+    });
+};
+
+/* =========================================================
+   TOKEN HELPERS
+========================================================= */
+
 const generateAccessToken = (user) => {
-
     return jwt.sign({
             userId: user._id.toString(),
             role: user.role
@@ -31,13 +176,9 @@ const generateAccessToken = (user) => {
             expiresIn: process.env.JWT_EXPIRE || "1d"
         }
     );
-
 };
 
-
-// Generate Refresh Token
 const generateRefreshToken = (user) => {
-
     return jwt.sign({
             userId: user._id.toString(),
             role: user.role
@@ -46,1096 +187,815 @@ const generateRefreshToken = (user) => {
             expiresIn: "7d"
         }
     );
-
 };
 
+/* =========================================================
+   SAFE USER RESPONSE
+========================================================= */
 
-// ========================================
-// USER REGISTER
-// ========================================
+const getSafeUser = (user) => {
+    return {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage,
+        isEmailVerified: user.isEmailVerified,
+        isActive: user.isActive
+    };
+};
 
-const registerUser = async(data) => {
+/* =========================================================
+   REGISTER USER
+========================================================= */
 
-    const {
-        name,
-        email,
-        password
-    } = data;
+const registerUser = async({
+    name,
+    email,
+    password
+}) => {
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-
-    const normalizedEmail =
-        email.toLowerCase().trim();
-
-
-    // Check existing user
-    const existingUser =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const existingUser = await User.findOne({
+        email: normalizedEmail
+    });
 
     if (existingUser) {
-
-        throw new Error(
-            "An account with this email already exists"
+        throw createError(
+            "User already exists with this email",
+            409
         );
-
     }
 
+    const hashedPassword = await bcrypt.hash(
+        password,
+        12
+    );
 
-    // Hash password
-    const hashedPassword =
-        await bcrypt.hash(password, 12);
+    const otp = generateOTP();
 
+    const user = await User.create({
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        role: "user",
+        isEmailVerified: false,
+        emailVerificationOTP: otp,
+        emailVerificationOTPExpire: new Date(Date.now() + 10 * 60 * 1000),
+        isActive: true
+    });
 
-    // Generate OTP
-    const otp =
-        generateOTP();
-
-
-    const otpExpire =
-        new Date(
-            Date.now() + 10 * 60 * 1000
-        );
-
-
-    // Create user
-    const user =
-        await User.create({
-
-            name,
-
-            email: normalizedEmail,
-
-            password: hashedPassword,
-
-            role: "user",
-
-            isEmailVerified: false,
-
-            emailVerificationOTP: otp,
-
-            emailVerificationOTPExpire: otpExpire
-
-        });
-
-
-    /*
-        IMPORTANT:
-
-        Yahan tumhara existing
-        email service call karna hoga.
-
-        Example:
-
-        await sendVerificationEmail(
+    try {
+        await sendVerificationOTP(
             normalizedEmail,
             otp
         );
-    */
+    } catch (error) {
+        console.error(
+            "Verification email failed:",
+            error.message
+        );
 
+        // Keep account so resend verification can still work.
+        // Do not expose SMTP details to client.
+        throw createError(
+            "Account created but verification email could not be sent. Please resend OTP.",
+            500
+        );
+    }
 
     return {
-
-        userId: user._id,
-
-        name: user.name,
-
-        email: user.email,
-
-        role: user.role,
-
-        isEmailVerified: user.isEmailVerified
-
+        message: "Registration successful. Please verify your email.",
+        user: getSafeUser(user)
     };
-
 };
 
+/* =========================================================
+   REGISTER ADMIN
+========================================================= */
 
-// ========================================
-// ADMIN REGISTER
-// ========================================
-
-const registerAdmin = async(data) => {
-
-    const {
-        name,
-        email,
-        password,
-        adminSecretKey
-    } = data;
-
-
-    // ========================================
-    // CHECK ADMIN SECRET
-    // ========================================
-
-    if (!adminSecretKey ||
-        adminSecretKey !==
-        process.env.JWT_SECRET
-    ) {
-
-        throw new Error(
-            "Invalid admin secret key"
+const registerAdmin = async({
+    name,
+    email,
+    password,
+    adminSecretKey
+}) => {
+    if (!process.env.ADMIN_SECRET_KEY) {
+        throw createError(
+            "Admin secret key is not configured on server",
+            500
         );
-
     }
 
+    if (!isValidAdminSecret(adminSecretKey)) {
+        throw createError(
+            "Invalid admin secret key",
+            401
+        );
+    }
 
-    const normalizedEmail =
-        email.toLowerCase().trim();
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-
-    // ========================================
-    // CHECK EXISTING EMAIL
-    // ========================================
-
-    const existingUser =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const existingUser = await User.findOne({
+        email: normalizedEmail
+    });
 
     if (existingUser) {
-
-        throw new Error(
-            "An account with this email already exists"
+        throw createError(
+            "User already exists with this email",
+            409
         );
-
     }
 
-
-    // ========================================
-    // CHECK EXISTING ADMIN
-    // ========================================
-
-    const existingAdmin =
-        await User.findOne({
-            role: "admin"
-        });
-
+    const existingAdmin = await User.findOne({
+        role: "admin"
+    });
 
     if (existingAdmin) {
-
-        throw new Error(
-            "An admin account already exists"
+        throw createError(
+            "Admin account already exists",
+            409
         );
-
     }
 
+    const hashedPassword = await bcrypt.hash(
+        password,
+        12
+    );
 
-    // ========================================
-    // HASH PASSWORD
-    // ========================================
+    const otp = generateOTP();
 
-    const hashedPassword =
-        await bcrypt.hash(password, 12);
+    const admin = await User.create({
+        name,
+        email: normalizedEmail,
+        password: hashedPassword,
+        role: "admin",
+        isEmailVerified: false,
+        emailVerificationOTP: otp,
+        emailVerificationOTPExpire: new Date(Date.now() + 10 * 60 * 1000),
+        isActive: true
+    });
 
-
-    // ========================================
-    // GENERATE OTP
-    // ========================================
-
-    const otp =
-        generateOTP();
-
-
-    const otpExpire =
-        new Date(
-            Date.now() + 10 * 60 * 1000
-        );
-
-
-    // ========================================
-    // CREATE ADMIN
-    // ========================================
-
-    const admin =
-        await User.create({
-
-            name,
-
-            email: normalizedEmail,
-
-            password: hashedPassword,
-
-            role: "admin",
-
-            isEmailVerified: false,
-
-            emailVerificationOTP: otp,
-
-            emailVerificationOTPExpire: otpExpire
-
-        });
-
-
-    /*
-        Existing email service:
-
-        await sendVerificationEmail(
+    try {
+        await sendVerificationOTP(
             normalizedEmail,
             otp
         );
-    */
+    } catch (error) {
+        console.error(
+            "Admin verification email failed:",
+            error.message
+        );
 
+        throw createError(
+            "Admin account created but verification email could not be sent. Please resend OTP.",
+            500
+        );
+    }
 
     return {
-
-        userId: admin._id,
-
-        name: admin.name,
-
-        email: admin.email,
-
-        role: admin.role,
-
-        isEmailVerified: admin.isEmailVerified
-
+        message: "Admin registration successful. Please verify your email.",
+        user: getSafeUser(admin)
     };
-
 };
 
+/* =========================================================
+   VERIFY EMAIL
+========================================================= */
 
-// ========================================
-// VERIFY EMAIL
-// ========================================
+const verifyEmail = async({
+    email,
+    otp
+}) => {
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-const verifyEmail = async(data) => {
-
-    const {
-        email,
-        otp
-    } = data;
-
-
-    const normalizedEmail =
-        email.toLowerCase().trim();
-
-
-    const user =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const user = await User.findOne({
+        email: normalizedEmail
+    });
 
     if (!user) {
-
-        throw new Error(
-            "User not found"
+        throw createError(
+            "User not found",
+            404
         );
-
     }
-
 
     if (user.isEmailVerified) {
-
-        throw new Error(
-            "Email is already verified"
+        throw createError(
+            "Email is already verified",
+            400
         );
-
     }
 
+    if (!user.emailVerificationOTP) {
+        throw createError(
+            "No verification OTP found. Please request a new OTP.",
+            400
+        );
+    }
 
-    if (!user.emailVerificationOTP ||
-        !user.emailVerificationOTPExpire
+    if (!user.emailVerificationOTPExpire ||
+        user.emailVerificationOTPExpire < new Date()
     ) {
-
-        throw new Error(
-            "Verification OTP not found"
+        throw createError(
+            "OTP has expired. Please request a new OTP.",
+            400
         );
-
     }
-
-
-    if (
-        user.emailVerificationOTPExpire <
-        new Date()
-    ) {
-
-        throw new Error(
-            "Verification OTP has expired"
-        );
-
-    }
-
 
     if (
         user.emailVerificationOTP !==
         otp
     ) {
-
-        throw new Error(
-            "Invalid verification OTP"
+        throw createError(
+            "Invalid OTP",
+            400
         );
-
     }
 
-
     user.isEmailVerified = true;
-
     user.emailVerificationOTP = null;
-
     user.emailVerificationOTPExpire = null;
-
 
     await user.save();
 
-
     return {
-
-        userId: user._id,
-
-        name: user.name,
-
-        email: user.email,
-
-        role: user.role,
-
-        isEmailVerified: user.isEmailVerified
-
+        message: "Email verified successfully.",
+        user: getSafeUser(user)
     };
-
 };
 
-
-// ========================================
-// RESEND VERIFICATION OTP
-// ========================================
+/* =========================================================
+   RESEND VERIFICATION OTP
+========================================================= */
 
 const resendVerificationOTP = async(
     email
 ) => {
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-    const normalizedEmail =
-        email.toLowerCase().trim();
-
-
-    const user =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const user = await User.findOne({
+        email: normalizedEmail
+    });
 
     if (!user) {
-
-        throw new Error(
-            "User not found"
+        throw createError(
+            "User not found",
+            404
         );
-
     }
-
 
     if (user.isEmailVerified) {
-
-        throw new Error(
-            "Email is already verified"
+        throw createError(
+            "Email is already verified",
+            400
         );
-
     }
 
+    const otp = generateOTP();
 
-    const otp =
-        generateOTP();
-
-
-    const otpExpire =
+    user.emailVerificationOTP = otp;
+    user.emailVerificationOTPExpire =
         new Date(
             Date.now() + 10 * 60 * 1000
         );
 
-
-    user.emailVerificationOTP =
-        otp;
-
-    user.emailVerificationOTPExpire =
-        otpExpire;
-
-
     await user.save();
 
-
-    /*
-        Existing email service:
-
-        await sendVerificationEmail(
-            normalizedEmail,
-            otp
-        );
-    */
-
+    await sendVerificationOTP(
+        normalizedEmail,
+        otp
+    );
 
     return {
-
-        email: user.email,
-
-        message: "Verification OTP sent successfully"
-
+        message: "Verification OTP sent successfully."
     };
-
 };
 
+/* =========================================================
+   USER LOGIN
+========================================================= */
 
-// ========================================
-// USER LOGIN
-// ========================================
+const loginUser = async({
+    email,
+    password
+}) => {
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-const loginUser = async(data) => {
-
-    const {
-        email,
-        password
-    } = data;
-
-
-    const normalizedEmail =
-        email.toLowerCase().trim();
-
-
-    const user =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const user = await User.findOne({
+        email: normalizedEmail,
+        role: "user"
+    });
 
     if (!user) {
-
-        throw new Error(
-            "Invalid email or password"
+        throw createError(
+            "Invalid email or password",
+            401
         );
-
     }
-
-
-    // User cannot login as admin
-    if (user.role !== "user") {
-
-        throw new Error(
-            "Please use admin login"
-        );
-
-    }
-
 
     if (!user.isActive) {
-
-        throw new Error(
-            "Your account has been deactivated"
+        throw createError(
+            "Your account has been deactivated",
+            403
         );
-
     }
 
-
-    const passwordMatch =
+    const isPasswordValid =
         await bcrypt.compare(
             password,
             user.password
         );
 
-
-    if (!passwordMatch) {
-
-        throw new Error(
-            "Invalid email or password"
+    if (!isPasswordValid) {
+        throw createError(
+            "Invalid email or password",
+            401
         );
-
     }
 
+    /*
+       User registered but did not verify email.
+       Generate fresh OTP and ask frontend to verify.
+    */
 
-    // Email verification
     if (!user.isEmailVerified) {
+        const otp = generateOTP();
 
-        const otp =
-            generateOTP();
-
-
-        user.emailVerificationOTP =
-            otp;
-
+        user.emailVerificationOTP = otp;
         user.emailVerificationOTPExpire =
             new Date(
                 Date.now() + 10 * 60 * 1000
             );
 
-
         await user.save();
 
-
-        /*
-            Existing email service:
-
-            await sendVerificationEmail(
-                user.email,
+        try {
+            await sendVerificationOTP(
+                normalizedEmail,
                 otp
             );
-        */
-
+        } catch (error) {
+            console.error(
+                "Login verification email failed:",
+                error.message
+            );
+        }
 
         return {
-
             requiresEmailVerification: true,
-
-            email: user.email
-
+            email: normalizedEmail
         };
-
     }
-
 
     const accessToken =
         generateAccessToken(user);
 
-
     const refreshToken =
         generateRefreshToken(user);
 
-
-    user.refreshToken =
-        refreshToken;
-
-    user.lastSeen =
-        new Date();
-
+    user.refreshToken = refreshToken;
 
     await user.save();
 
-
     return {
-
-        user: {
-
-            userId: user._id,
-
-            name: user.name,
-
-            email: user.email,
-
-            role: user.role,
-
-            profileImage: user.profileImage,
-
-            isEmailVerified: user.isEmailVerified
-
-        },
-
+        message: "Login successful.",
+        user: getSafeUser(user),
         accessToken,
-
         refreshToken
-
     };
-
 };
 
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
 
-// ========================================
-// ADMIN LOGIN
-// ========================================
-
-const loginAdmin = async(data) => {
-
-    const {
-        email,
-        password,
-        adminSecretKey
-    } = data;
-
-
-    // ========================================
-    // SECRET KEY CHECK
-    // ========================================
-
-    if (!adminSecretKey ||
-        adminSecretKey !==
-        process.env.JWT_SECRET
-    ) {
-
-        throw new Error(
-            "Invalid admin secret key"
+const loginAdmin = async({
+    email,
+    password,
+    adminSecretKey
+}) => {
+    if (!process.env.ADMIN_SECRET_KEY) {
+        throw createError(
+            "Admin secret key is not configured on server",
+            500
         );
-
     }
 
+    if (!isValidAdminSecret(adminSecretKey)) {
+        throw createError(
+            "Invalid admin secret key",
+            401
+        );
+    }
 
-    const normalizedEmail =
-        email.toLowerCase().trim();
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-
-    const admin =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const admin = await User.findOne({
+        email: normalizedEmail,
+        role: "admin"
+    });
 
     if (!admin) {
-
-        throw new Error(
-            "Invalid admin credentials"
+        throw createError(
+            "Invalid admin credentials",
+            401
         );
-
     }
-
-
-    // ========================================
-    // ROLE CHECK
-    // ========================================
-
-    if (admin.role !== "admin") {
-
-        throw new Error(
-            "This account is not an admin account"
-        );
-
-    }
-
 
     if (!admin.isActive) {
-
-        throw new Error(
-            "Admin account is deactivated"
+        throw createError(
+            "Admin account is deactivated",
+            403
         );
-
     }
 
-
-    // ========================================
-    // PASSWORD CHECK
-    // ========================================
-
-    const passwordMatch =
+    const isPasswordValid =
         await bcrypt.compare(
             password,
             admin.password
         );
 
-
-    if (!passwordMatch) {
-
-        throw new Error(
-            "Invalid admin credentials"
+    if (!isPasswordValid) {
+        throw createError(
+            "Invalid admin credentials",
+            401
         );
-
     }
 
-
-    // ========================================
-    // EMAIL VERIFICATION
-    // ========================================
+    /*
+       Admin is registered but email is not verified.
+    */
 
     if (!admin.isEmailVerified) {
+        const otp = generateOTP();
 
-        const otp =
-            generateOTP();
-
-
-        admin.emailVerificationOTP =
-            otp;
-
+        admin.emailVerificationOTP = otp;
         admin.emailVerificationOTPExpire =
             new Date(
                 Date.now() + 10 * 60 * 1000
             );
 
-
         await admin.save();
 
-
-        /*
-            Existing email service:
-
-            await sendVerificationEmail(
-                admin.email,
+        try {
+            await sendVerificationOTP(
+                normalizedEmail,
                 otp
             );
-        */
-
+        } catch (error) {
+            console.error(
+                "Admin login verification email failed:",
+                error.message
+            );
+        }
 
         return {
-
             requiresEmailVerification: true,
-
-            email: admin.email
-
+            email: normalizedEmail
         };
-
     }
-
-
-    // ========================================
-    // TOKENS
-    // ========================================
 
     const accessToken =
         generateAccessToken(admin);
 
-
     const refreshToken =
         generateRefreshToken(admin);
 
-
-    admin.refreshToken =
-        refreshToken;
-
-    admin.lastSeen =
-        new Date();
-
+    admin.refreshToken = refreshToken;
 
     await admin.save();
 
-
     return {
-
-        user: {
-
-            userId: admin._id,
-
-            name: admin.name,
-
-            email: admin.email,
-
-            role: admin.role,
-
-            profileImage: admin.profileImage,
-
-            isEmailVerified: admin.isEmailVerified
-
-        },
-
+        message: "Admin login successful.",
+        user: getSafeUser(admin),
         accessToken,
-
         refreshToken
-
     };
-
 };
 
-
-// ========================================
-// REFRESH ACCESS TOKEN
-// ========================================
+/* =========================================================
+   REFRESH ACCESS TOKEN
+========================================================= */
 
 const refreshAccessToken = async(
-    token
+    refreshToken
 ) => {
-
-    if (!token) {
-
-        throw new Error(
-            "Refresh token is required"
+    if (!refreshToken) {
+        throw createError(
+            "Refresh token missing",
+            401
         );
-
     }
 
+    let decoded;
 
-    const decoded =
-        jwt.verify(
-            token,
+    try {
+        decoded = jwt.verify(
+            refreshToken,
             process.env.JWT_SECRET
         );
-
-
-    const user =
-        await User.findById(
-            decoded.userId
+    } catch (error) {
+        throw createError(
+            "Invalid or expired refresh token",
+            401
         );
+    }
 
+    const user = await User.findById(
+        decoded.userId
+    );
 
     if (!user) {
-
-        throw new Error(
-            "User not found"
+        throw createError(
+            "User not found",
+            401
         );
-
     }
-
 
     if (!user.isActive) {
-
-        throw new Error(
-            "Account is deactivated"
+        throw createError(
+            "Your account has been deactivated",
+            403
         );
-
     }
 
+    if (!user.refreshToken) {
+        throw createError(
+            "Refresh session not found",
+            401
+        );
+    }
 
     if (
-        user.refreshToken !== token
+        user.refreshToken !==
+        refreshToken
     ) {
-
-        throw new Error(
-            "Invalid refresh token"
+        throw createError(
+            "Invalid refresh token",
+            401
         );
-
     }
-
 
     const accessToken =
         generateAccessToken(user);
 
-
     return {
-
-        accessToken
-
+        accessToken,
+        user: getSafeUser(user)
     };
-
 };
 
-
-// ========================================
-// LOGOUT
-// ========================================
+/* =========================================================
+   LOGOUT
+========================================================= */
 
 const logoutUser = async(
     refreshToken
 ) => {
-
     if (!refreshToken) {
-        return;
+        return {
+            message: "Logged out successfully."
+        };
     }
 
-
     try {
-
-        const decoded =
-            jwt.verify(
-                refreshToken,
-                process.env.JWT_SECRET
-            );
-
+        const decoded = jwt.verify(
+            refreshToken,
+            process.env.JWT_SECRET
+        );
 
         await User.findByIdAndUpdate(
             decoded.userId, {
-                refreshToken: null
+                $set: {
+                    refreshToken: null
+                }
             }
         );
-
     } catch (error) {
-
-        // Token already invalid/expired.
-        // Logout should still succeed.
-
+        /*
+           Even if token is already invalid/expired,
+           logout should still succeed on frontend.
+        */
+        console.log(
+            "Logout token cleanup skipped:",
+            error.message
+        );
     }
 
+    return {
+        message: "Logged out successfully."
+    };
 };
 
-
-// ========================================
-// FORGOT PASSWORD
-// ========================================
+/* =========================================================
+   FORGOT PASSWORD
+========================================================= */
 
 const forgotPassword = async(
     email
 ) => {
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-    const normalizedEmail =
-        email.toLowerCase().trim();
-
-
-    const user =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
-
-    /*
-        Security:
-        Don't reveal whether email exists.
-    */
+    const user = await User.findOne({
+        email: normalizedEmail
+    });
 
     if (!user) {
-        return;
+        throw createError(
+            "No account found with this email",
+            404
+        );
     }
 
+    if (!user.isActive) {
+        throw createError(
+            "Your account has been deactivated",
+            403
+        );
+    }
 
-    const otp =
-        generateOTP();
+    const otp = generateOTP();
 
-
-    user.resetPasswordOTP =
-        otp;
-
+    user.resetPasswordOTP = otp;
     user.resetPasswordOTPExpire =
         new Date(
             Date.now() + 10 * 60 * 1000
         );
 
-
     await user.save();
 
+    await sendPasswordResetOTP(
+        normalizedEmail,
+        otp
+    );
 
-    /*
-        Existing email service:
-
-        await sendPasswordResetEmail(
-            user.email,
-            otp
-        );
-    */
-
+    return {
+        message: "Password reset OTP sent successfully."
+    };
 };
 
+/* =========================================================
+   RESET PASSWORD
+========================================================= */
 
-// ========================================
-// RESET PASSWORD
-// ========================================
+const resetPassword = async({
+    email,
+    otp,
+    newPassword
+}) => {
+    const normalizedEmail = email
+        .trim()
+        .toLowerCase();
 
-const resetPassword = async(
-    data
-) => {
-
-    const {
-        email,
-        otp,
-        newPassword
-    } = data;
-
-
-    const normalizedEmail =
-        email.toLowerCase().trim();
-
-
-    const user =
-        await User.findOne({
-            email: normalizedEmail
-        });
-
+    const user = await User.findOne({
+        email: normalizedEmail
+    });
 
     if (!user) {
-
-        throw new Error(
-            "Invalid reset request"
+        throw createError(
+            "User not found",
+            404
         );
-
     }
 
+    if (!user.resetPasswordOTP) {
+        throw createError(
+            "No password reset OTP found",
+            400
+        );
+    }
 
-    if (!user.resetPasswordOTP ||
-        !user.resetPasswordOTPExpire
+    if (!user.resetPasswordOTPExpire ||
+        user.resetPasswordOTPExpire < new Date()
     ) {
-
-        throw new Error(
-            "Password reset OTP not found"
+        throw createError(
+            "OTP has expired. Please request a new one.",
+            400
         );
-
     }
-
 
     if (
-        user.resetPasswordOTPExpire <
-        new Date()
+        user.resetPasswordOTP !==
+        otp
     ) {
-
-        throw new Error(
-            "Password reset OTP has expired"
+        throw createError(
+            "Invalid OTP",
+            400
         );
-
     }
 
-
-    if (
-        user.resetPasswordOTP !== otp
-    ) {
-
-        throw new Error(
-            "Invalid password reset OTP"
-        );
-
-    }
-
-
-    user.password =
+    const hashedPassword =
         await bcrypt.hash(
             newPassword,
             12
         );
 
+    user.password = hashedPassword;
 
-    user.resetPasswordOTP =
-        null;
+    user.resetPasswordOTP = null;
+    user.resetPasswordOTPExpire = null;
 
-    user.resetPasswordOTPExpire =
-        null;
-
-    user.refreshToken =
-        null;
-
+    /*
+       Force all existing sessions to logout
+       after password reset.
+    */
+    user.refreshToken = null;
 
     await user.save();
 
-
     return {
-
-        message: "Password reset successfully"
-
+        message: "Password reset successfully. Please login again."
     };
-
 };
 
-
-// ========================================
-// CHANGE PASSWORD
-// ========================================
+/* =========================================================
+   CHANGE PASSWORD
+========================================================= */
 
 const changePassword = async({
     userId,
     currentPassword,
     newPassword
 }) => {
-
-    const user =
-        await User.findById(
-            userId
-        );
-
+    const user = await User.findById(
+        userId
+    );
 
     if (!user) {
-
-        throw new Error(
-            "User not found"
+        throw createError(
+            "User not found",
+            404
         );
-
     }
 
+    if (!user.isActive) {
+        throw createError(
+            "Your account has been deactivated",
+            403
+        );
+    }
 
-    const passwordMatch =
+    const isCurrentPasswordValid =
         await bcrypt.compare(
             currentPassword,
             user.password
         );
 
-
-    if (!passwordMatch) {
-
-        throw new Error(
-            "Current password is incorrect"
+    if (!isCurrentPasswordValid) {
+        throw createError(
+            "Current password is incorrect",
+            401
         );
-
     }
 
+    if (
+        currentPassword === newPassword
+    ) {
+        throw createError(
+            "New password must be different from current password",
+            400
+        );
+    }
 
-    user.password =
+    const hashedPassword =
         await bcrypt.hash(
             newPassword,
             12
         );
 
+    user.password = hashedPassword;
 
-    // Invalidate existing refresh token
-    user.refreshToken =
-        null;
-
+    /*
+       Invalidate old refresh session
+       after password change.
+    */
+    user.refreshToken = null;
 
     await user.save();
 
-
-    return true;
-
+    return {
+        message: "Password changed successfully. Please login again."
+    };
 };
 
-
-// ========================================
-// EXPORTS
-// ========================================
+/* =========================================================
+   EXPORTS
+========================================================= */
 
 export {
     registerUser,

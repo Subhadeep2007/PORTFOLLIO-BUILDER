@@ -22,20 +22,31 @@ const register = async(
     res,
     next
 ) => {
+
     try {
 
         const user =
-            await registerUser(req.body);
+            await registerUser(
+                req.body
+            );
+
 
         return res.status(201).json({
+
             success: true,
+
             message: "Registration successful. Please verify your email.",
+
             data: user
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -48,20 +59,31 @@ const adminRegister = async(
     res,
     next
 ) => {
+
     try {
 
         const admin =
-            await registerAdmin(req.body);
+            await registerAdmin(
+                req.body
+            );
+
 
         return res.status(201).json({
+
             success: true,
+
             message: "Admin registration successful. Please verify your email.",
+
             data: admin
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -74,20 +96,31 @@ const verifyEmail = async(
     res,
     next
 ) => {
+
     try {
 
         const user =
-            await verifyEmailService(req.body);
+            await verifyEmailService(
+                req.body
+            );
+
 
         return res.status(200).json({
+
             success: true,
+
             message: "Email verified successfully",
+
             data: user
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -100,30 +133,46 @@ const login = async(
     res,
     next
 ) => {
+
     try {
 
         const result =
-            await loginUser(req.body);
+            await loginUser(
+                req.body
+            );
+
 
         if (
             result.requiresEmailVerification
         ) {
 
             return res.status(200).json({
+
                 success: true,
 
                 message: "Your email is not verified. A new verification OTP has been sent to your email.",
 
                 data: {
+
                     requiresEmailVerification: true,
+
                     email: result.email
+
                 }
+
             });
+
         }
 
+
         res.cookie(
+
             "refreshToken",
-            result.refreshToken, {
+
+            result.refreshToken,
+
+            {
+
                 httpOnly: true,
 
                 secure: process.env.NODE_ENV ===
@@ -136,22 +185,34 @@ const login = async(
                     60 *
                     60 *
                     1000
+
             }
+
         );
 
+
         return res.status(200).json({
+
             success: true,
+
             message: "Login successful",
 
             data: {
+
                 user: result.user,
+
                 accessToken: result.accessToken
+
             }
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -164,31 +225,46 @@ const adminLogin = async(
     res,
     next
 ) => {
+
     try {
 
         const result =
-            await loginAdmin(req.body);
+            await loginAdmin(
+                req.body
+            );
+
 
         if (
             result.requiresEmailVerification
         ) {
 
             return res.status(200).json({
+
                 success: true,
 
                 message: "Your email is not verified. A new verification OTP has been sent to your email.",
 
                 data: {
+
                     requiresEmailVerification: true,
 
                     email: result.email
+
                 }
+
             });
+
         }
 
+
         res.cookie(
+
             "refreshToken",
-            result.refreshToken, {
+
+            result.refreshToken,
+
+            {
+
                 httpOnly: true,
 
                 secure: process.env.NODE_ENV ===
@@ -201,22 +277,34 @@ const adminLogin = async(
                     60 *
                     60 *
                     1000
+
             }
+
         );
 
+
         return res.status(200).json({
+
             success: true,
+
             message: "Admin login successful",
 
             data: {
+
                 user: result.user,
+
                 accessToken: result.accessToken
+
             }
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -229,25 +317,35 @@ const refreshToken = async(
     res,
     next
 ) => {
+
     try {
 
         const token =
             req.cookies.refreshToken;
 
+
         const result =
-            await refreshAccessToken(token);
+            await refreshAccessToken(
+                token
+            );
+
 
         return res.status(200).json({
+
             success: true,
 
             message: "Access token refreshed successfully",
 
             data: result
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -260,6 +358,7 @@ const resendVerificationOTP = async(
     res,
     next
 ) => {
+
     try {
 
         const result =
@@ -267,17 +366,23 @@ const resendVerificationOTP = async(
                 req.body.email
             );
 
+
         return res.status(200).json({
+
             success: true,
 
             message: "Verification OTP sent successfully",
 
             data: result
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -290,34 +395,50 @@ const logout = async(
     res,
     next
 ) => {
+
     try {
 
         const refreshToken =
             req.cookies.refreshToken;
 
+
         await logoutUser(
             refreshToken
         );
 
+
         res.clearCookie(
-            "refreshToken", {
+
+            "refreshToken",
+
+            {
+
                 httpOnly: true,
 
                 secure: process.env.NODE_ENV ===
                     "production",
 
                 sameSite: "strict"
+
             }
+
         );
 
+
         return res.status(200).json({
+
             success: true,
+
             message: "Logout successful"
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -330,21 +451,28 @@ const forgotPasswordController = async(
     res,
     next
 ) => {
+
     try {
 
         await forgotPassword(
             req.body.email
         );
 
+
         return res.status(200).json({
+
             success: true,
 
             message: "If the account exists, a password reset OTP has been sent."
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -357,6 +485,7 @@ const resetPasswordController = async(
     res,
     next
 ) => {
+
     try {
 
         const result =
@@ -364,17 +493,23 @@ const resetPasswordController = async(
                 req.body
             );
 
+
         return res.status(200).json({
+
             success: true,
 
             message: "Password reset successfully",
 
             data: result
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
@@ -387,38 +522,59 @@ const changePasswordController = async(
     res,
     next
 ) => {
+
     try {
 
         await changePassword({
+
             userId: req.user.userId,
 
             currentPassword: req.body.currentPassword,
 
             newPassword: req.body.newPassword
+
         });
 
+
         return res.status(200).json({
+
             success: true,
 
             message: "Password changed successfully"
+
         });
 
     } catch (error) {
+
         next(error);
+
     }
+
 };
 
 
 export {
+
     register,
+
     adminRegister,
+
     verifyEmail,
+
     resendVerificationOTP,
+
     login,
+
     adminLogin,
+
     refreshToken,
+
     logout,
+
     forgotPasswordController,
+
     resetPasswordController,
+
     changePasswordController
+
 };

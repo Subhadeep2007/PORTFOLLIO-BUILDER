@@ -36,7 +36,8 @@ const AdminLogin = () => {
 
     const [form, setForm] = useState({
         email: "",
-        password: ""
+        password: "",
+        adminSecretKey: ""
     });
 
 
@@ -64,18 +65,38 @@ const AdminLogin = () => {
         setError("");
 
 
+        if (
+            !form.email.trim() ||
+            !form.password ||
+            !form.adminSecretKey
+        ) {
+
+            setError(
+                "Please fill all required fields."
+            );
+
+            return;
+        }
+
+
         try {
 
             setLoading(true);
 
 
             const response =
-                await loginAdmin(form);
+                await loginAdmin({
+                    email:
+                        form.email.trim(),
+                    password:
+                        form.password,
+                    adminSecretKey:
+                        form.adminSecretKey
+                });
 
 
             if (
-                response?.data
-                    ?.requiresEmailVerification
+                response?.requiresEmailVerification
             ) {
 
                 navigate(
@@ -83,7 +104,7 @@ const AdminLogin = () => {
                     {
                         state: {
                             email:
-                                response.data.email,
+                                response.email,
                             admin: true
                         }
                     }
@@ -134,6 +155,16 @@ const AdminLogin = () => {
                         value={form.email}
                         onChange={handleChange}
                         placeholder="admin@example.com"
+                    />
+
+
+                    <AuthInput
+                        label="Admin Secret Key"
+                        name="adminSecretKey"
+                        type="password"
+                        value={form.adminSecretKey}
+                        onChange={handleChange}
+                        placeholder="Enter admin secret"
                     />
 
 

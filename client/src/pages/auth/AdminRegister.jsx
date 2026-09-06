@@ -35,7 +35,7 @@ const AdminRegister = () => {
         email: "",
         password: "",
         confirmPassword: "",
-        adminSecret: ""
+        adminSecretKey: ""
     });
 
 
@@ -67,7 +67,8 @@ const AdminRegister = () => {
             !form.name.trim() ||
             !form.email.trim() ||
             !form.password ||
-            !form.adminSecret
+            !form.confirmPassword ||
+            !form.adminSecretKey
         ) {
 
             setError(
@@ -100,7 +101,8 @@ const AdminRegister = () => {
                 name: form.name.trim(),
                 email: form.email.trim(),
                 password: form.password,
-                adminSecret: form.adminSecret
+                adminSecretKey:
+                    form.adminSecretKey
             });
 
 
@@ -108,7 +110,8 @@ const AdminRegister = () => {
                 "/verify-email",
                 {
                     state: {
-                        email: form.email.trim(),
+                        email:
+                            form.email.trim(),
                         admin: true
                     }
                 }
@@ -149,6 +152,7 @@ const AdminRegister = () => {
                         placeholder="Admin name"
                     />
 
+
                     <AuthInput
                         label="Email"
                         name="email"
@@ -158,14 +162,16 @@ const AdminRegister = () => {
                         placeholder="admin@example.com"
                     />
 
+
                     <AuthInput
                         label="Admin Secret Key"
-                        name="adminSecret"
+                        name="adminSecretKey"
                         type="password"
-                        value={form.adminSecret}
+                        value={form.adminSecretKey}
                         onChange={handleChange}
                         placeholder="Enter admin secret"
                     />
+
 
                     <AuthInput
                         label="Password"
@@ -176,6 +182,7 @@ const AdminRegister = () => {
                         placeholder="••••••••"
                     />
 
+
                     <AuthInput
                         label="Confirm Password"
                         name="confirmPassword"
@@ -185,6 +192,7 @@ const AdminRegister = () => {
                         placeholder="••••••••"
                         error={error}
                     />
+
 
                     <AuthButton
                         type="submit"

@@ -1,14 +1,26 @@
-import dotenv from "dotenv";
-
-dotenv.config();
+import "dotenv/config";
 
 import app from "./app.js";
-import connectDB from "./src/config/db.js";
+
+import connectDB
+from "./src/config/db.js";
 
 
 const PORT =
     process.env.PORT || 8080;
 
+
+console.log(
+    "ADMIN_SECRET_KEY loaded:",
+    process.env.ADMIN_SECRET_KEY ?
+    "YES" :
+    "NO"
+);
+
+
+// ========================================
+// START SERVER
+// ========================================
 
 const startServer = async() => {
 
@@ -35,7 +47,9 @@ const startServer = async() => {
         );
 
         process.exit(1);
+
     }
+
 };
 
 
