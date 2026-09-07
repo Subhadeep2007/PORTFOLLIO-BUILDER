@@ -316,7 +316,7 @@ Create environment files for the frontend and backend according to your local se
 
 Typical backend configuration includes values for:
 
-PORT=5000
+PORT=8080
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 FRONTEND_URL=http://localhost:5173
@@ -483,3 +483,4 @@ If this project helped you or you like the idea, consider giving the repository 
 📄 License
 
 Add the license that you choose for this project before making the repository public.
+LINK : https://myprotfolio-snowy.vercel.app
