@@ -1,5 +1,6 @@
 import api from "./axios";
 
+
 // ========================================
 // GET MY PORTFOLIO
 // ========================================
@@ -91,6 +92,53 @@ export const deletePortfolio = async() => {
         await api.delete(
             "/portfolio"
         );
+
+    return response.data;
+};
+
+
+// ========================================
+// UPLOAD RESUME
+// ========================================
+
+export const uploadResume = async(
+    file
+) => {
+
+    if (!file) {
+
+        throw new Error(
+            "Please select a resume"
+        );
+
+    }
+
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        "resume",
+        file
+    );
+
+
+    const response =
+        await api.post(
+
+            "/portfolio/resume/upload",
+
+            formData,
+
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data"
+                }
+            }
+
+        );
+
 
     return response.data;
 };

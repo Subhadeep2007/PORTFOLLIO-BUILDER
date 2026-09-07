@@ -10,6 +10,10 @@ import {
     useAuth
 } from "../../context/AuthContext";
 
+import {
+    usePortfolio
+} from "../../context/PortfolioContext";
+
 
 const Dashboard = () => {
 
@@ -17,6 +21,11 @@ const Dashboard = () => {
         user,
         logout
     } = useAuth();
+
+    const {
+        portfolio,
+        loading: portfolioLoading
+    } = usePortfolio();
 
 
     const [loggingOut, setLoggingOut] =
@@ -236,6 +245,387 @@ const Dashboard = () => {
                     </div>
 
                 </header>
+
+
+                {/* ========================================
+                    USER PROFILE
+                ======================================== */}
+
+                <section
+                    className="
+                        mb-10
+                        overflow-hidden
+                        rounded-3xl
+                        border
+                        border-white/10
+                        bg-[#0b1020]/80
+                        backdrop-blur-xl
+                        shadow-[0_0_60px_rgba(0,200,255,0.04)]
+                    "
+                >
+                    <div
+                        className="
+                            relative
+                            overflow-hidden
+                            p-5
+                            sm:p-7
+                        "
+                    >
+                        <div
+                            className="
+                                pointer-events-none
+                                absolute
+                                -right-24
+                                -top-24
+                                h-64
+                                w-64
+                                rounded-full
+                                bg-cyan-400/10
+                                blur-3xl
+                            "
+                        />
+
+                        <div
+                            className="
+                                relative
+                                flex
+                                flex-col
+                                gap-6
+                                lg:flex-row
+                                lg:items-center
+                                lg:justify-between
+                            "
+                        >
+                            <div
+                                className="
+                                    flex
+                                    min-w-0
+                                    items-center
+                                    gap-4
+                                "
+                            >
+                                <div
+                                    className="
+                                        flex
+                                        h-20
+                                        w-20
+                                        shrink-0
+                                        items-center
+                                        justify-center
+                                        overflow-hidden
+                                        rounded-2xl
+                                        border
+                                        border-cyan-400/20
+                                        bg-cyan-400/5
+                                        text-2xl
+                                        font-black
+                                        text-cyan-300
+                                        shadow-[0_0_35px_rgba(34,211,238,0.08)]
+                                    "
+                                >
+                                    {portfolio && portfolio.profileImage ? (
+                                        <img
+                                            src={portfolio.profileImage}
+                                            alt={
+                                                portfolio.title ||
+                                                user.name ||
+                                                "Profile"
+                                            }
+                                            className="
+                                                h-full
+                                                w-full
+                                                object-cover
+                                            "
+                                        />
+                                    ) : (
+                                        (
+                                            portfolio && portfolio.title
+                                                ? portfolio.title
+                                                : user && user.name
+                                                    ? user.name
+                                                    : "U"
+                                        )
+                                            .charAt(0)
+                                            .toUpperCase()
+                                    )}
+                                </div>
+
+                                <div className="min-w-0">
+                                    <p
+                                        className="
+                                            text-[10px]
+                                            font-bold
+                                            uppercase
+                                            tracking-[0.22em]
+                                            text-cyan-400
+                                        "
+                                    >
+                                        User Profile
+                                    </p>
+
+                                    <h2
+                                        className="
+                                            mt-1
+                                            truncate
+                                            text-xl
+                                            font-bold
+                                            text-white
+                                            sm:text-2xl
+                                        "
+                                    >
+                                        {
+                                            portfolio && portfolio.title
+                                                ? portfolio.title
+                                                : user && user.name
+                                                    ? user.name
+                                                    : "Your Profile"
+                                        }
+                                    </h2>
+
+                                    <p
+                                        className="
+                                            mt-1
+                                            truncate
+                                            text-sm
+                                            text-slate-400
+                                        "
+                                    >
+                                        {
+                                            portfolio && portfolio.headline
+                                                ? portfolio.headline
+                                                : user && user.email
+                                                    ? user.email
+                                                    : "Complete your profile"
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+
+                            <Link
+                                to="/dashboard/portfolio"
+                                className="
+                                    inline-flex
+                                    shrink-0
+                                    items-center
+                                    justify-center
+                                    rounded-xl
+                                    border
+                                    border-cyan-400/20
+                                    bg-cyan-400/5
+                                    px-4
+                                    py-2.5
+                                    text-sm
+                                    font-semibold
+                                    text-cyan-300
+                                    transition
+                                    hover:border-cyan-400/40
+                                    hover:bg-cyan-400/10
+                                "
+                            >
+                                Edit Profile →
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div
+                        className="
+                            grid
+                            border-t
+                            border-white/10
+                            sm:grid-cols-2
+                            lg:grid-cols-4
+                        "
+                    >
+                        <div
+                            className="
+                                border-b
+                                border-white/10
+                                p-5
+                                sm:border-r
+                                lg:border-b-0
+                            "
+                        >
+                            <p
+                                className="
+                                    text-[10px]
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.18em]
+                                    text-slate-600
+                                "
+                            >
+                                Location
+                            </p>
+
+                            <p className="mt-2 text-sm text-slate-300">
+                                {
+                                    portfolio && portfolio.location
+                                        ? portfolio.location
+                                        : "Not added"
+                                }
+                            </p>
+                        </div>
+
+                        <div
+                            className="
+                                border-b
+                                border-white/10
+                                p-5
+                                lg:border-r
+                                lg:border-b-0
+                            "
+                        >
+                            <p
+                                className="
+                                    text-[10px]
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.18em]
+                                    text-slate-600
+                                "
+                            >
+                                Email
+                            </p>
+
+                            <p className="mt-2 break-all text-sm text-slate-300">
+                                {
+                                    portfolio && portfolio.email
+                                        ? portfolio.email
+                                        : user && user.email
+                                            ? user.email
+                                            : "Not added"
+                                }
+                            </p>
+                        </div>
+
+                        <div
+                            className="
+                                border-b
+                                border-white/10
+                                p-5
+                                sm:border-r
+                                sm:border-b-0
+                            "
+                        >
+                            <p
+                                className="
+                                    text-[10px]
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.18em]
+                                    text-slate-600
+                                "
+                            >
+                                Phone
+                            </p>
+
+                            <p className="mt-2 text-sm text-slate-300">
+                                {
+                                    portfolio && portfolio.phone
+                                        ? portfolio.phone
+                                        : "Not added"
+                                }
+                            </p>
+                        </div>
+
+                        <div className="p-5">
+                            <p
+                                className="
+                                    text-[10px]
+                                    font-bold
+                                    uppercase
+                                    tracking-[0.18em]
+                                    text-slate-600
+                                "
+                            >
+                                Resume
+                            </p>
+
+                            {portfolio &&
+                            portfolio.resume &&
+                            portfolio.resume.url ? (
+                                <a
+                                    href={portfolio.resume.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="
+                                        mt-2
+                                        inline-flex
+                                        text-sm
+                                        font-semibold
+                                        text-cyan-300
+                                        hover:text-cyan-200
+                                    "
+                                >
+                                    {portfolio.resume.fileName || "Open Resume"} ↗
+                                </a>
+                            ) : (
+                                <p className="mt-2 text-sm text-slate-500">
+                                    Not added
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    {portfolio && (
+                        <div
+                            className="
+                                border-t
+                                border-white/10
+                                px-5
+                                py-4
+                                sm:px-7
+                            "
+                        >
+                            <div
+                                className="
+                                    flex
+                                    flex-wrap
+                                    items-center
+                                    gap-x-5
+                                    gap-y-2
+                                "
+                            >
+                                <p className="text-[10px] uppercase tracking-[0.18em] text-slate-600">
+                                    Profile source:
+                                    <span className="ml-2 text-emerald-300">
+                                        Portfolio
+                                    </span>
+                                </p>
+
+                                <p className="text-[10px] text-slate-600">
+                                    The same portfolio profile image is used here and in the public portfolio.
+                                </p>
+
+                                {portfolio.website ? (
+                                    <a
+                                        href={portfolio.website}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-xs text-slate-400 hover:text-cyan-300"
+                                    >
+                                        Website ↗
+                                    </a>
+                                ) : null}
+                            </div>
+                        </div>
+                    )}
+
+                    {portfolioLoading ? (
+                        <div
+                            className="
+                                border-t
+                                border-white/10
+                                px-5
+                                py-2
+                                text-[10px]
+                                text-slate-600
+                            "
+                        >
+                            Syncing profile...
+                        </div>
+                    ) : null}
+                </section>
 
 
                 {/* QUICK ACTIONS */}

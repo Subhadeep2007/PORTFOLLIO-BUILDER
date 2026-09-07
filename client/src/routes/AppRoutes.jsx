@@ -26,11 +26,38 @@ import ForgotPassword
 import ResetPassword
     from "../pages/auth/ResetPassword";
 
+
 import Dashboard
     from "../pages/dashboard/Dashboard";
 
 import AdminDashboard
     from "../pages/admin/AdminDashboard";
+
+
+import PortfolioEditor
+    from "../pages/builder/PortfolioEditor";
+
+import PublicPortfolio
+    from "../pages/public/PublicPortfolio";
+
+
+import ProjectsPage
+    from "../pages/dashboard/projects/ProjectsPage";
+
+import SkillsPage
+    from "../pages/dashboard/skills/SkillsPage";
+
+import ExperiencePage
+    from "../pages/dashboard/experience/ExperiencePage";
+
+import EducationPage
+    from "../pages/dashboard/education/EducationPage";
+
+import CertificatesPage
+    from "../pages/dashboard/certificates/CertificatesPage";
+
+import PostsPage
+    from "../pages/dashboard/posts/PostsPage";
 
 
 import ProtectedRoute
@@ -39,18 +66,7 @@ import ProtectedRoute
 import AdminRoute
     from "./AdminRoute";
 
-import PortfolioEditor
-    from "../pages/builder/PortfolioEditor";
-import ProjectsPage from "../pages/dashboard/projects/ProjectsPage";
-import SkillsPage
-    from "../pages/dashboard/skills/SkillsPage";
-    import ExperiencePage
-    from "../pages/dashboard/experience/ExperiencePage";
-    import EducationPage from "../pages/dashboard/education/EducationPage";
-    import CertificatesPage
-    from "../pages/dashboard/certificates/CertificatesPage";
-    import PostsPage
-    from "../pages/dashboard/posts/PostsPage";
+
 const AppRoutes = () => {
 
     return (
@@ -96,44 +112,62 @@ const AppRoutes = () => {
                 />
 
 
+                {/* ================= PUBLIC PORTFOLIO ================= */}
+
+                <Route
+                    path="/portfolio/:slug"
+                    element={
+                        <PublicPortfolio />
+                    }
+                />
+
+
                 {/* ================= USER ================= */}
 
-<Route element={<ProtectedRoute />}>
+                <Route element={<ProtectedRoute />}>
 
-    <Route
-        path="/dashboard"
-        element={<Dashboard />}
-    />
+                    <Route
+                        path="/dashboard"
+                        element={<Dashboard />}
+                    />
 
-    <Route
-        path="/dashboard/portfolio"
-        element={<PortfolioEditor />}
-    />
-    <Route
-    path="/dashboard/projects"
-    element={<ProjectsPage />}
-/>
-<Route
-    path="/dashboard/skills"
-    element={<SkillsPage />}
-/>
-<Route
-    path="/dashboard/experience"
-    element={<ExperiencePage />}
-/>
-<Route
-    path="/dashboard/education"
-    element={<EducationPage />}
-/>
-<Route
-    path="/dashboard/certificates"
-    element={<CertificatesPage />}
-/>
-<Route
-    path="/dashboard/posts"
-    element={<PostsPage />}
-/>
-</Route>
+                    <Route
+                        path="/dashboard/portfolio"
+                        element={<PortfolioEditor />}
+                    />
+
+                    <Route
+                        path="/dashboard/projects"
+                        element={<ProjectsPage />}
+                    />
+
+                    <Route
+                        path="/dashboard/skills"
+                        element={<SkillsPage />}
+                    />
+
+                    <Route
+                        path="/dashboard/experience"
+                        element={<ExperiencePage />}
+                    />
+
+                    <Route
+                        path="/dashboard/education"
+                        element={<EducationPage />}
+                    />
+
+                    <Route
+                        path="/dashboard/certificates"
+                        element={<CertificatesPage />}
+                    />
+
+                    <Route
+                        path="/dashboard/posts"
+                        element={<PostsPage />}
+                    />
+
+                </Route>
+
 
                 {/* ================= ADMIN ================= */}
 
@@ -152,7 +186,16 @@ const AppRoutes = () => {
                 <Route
                     path="*"
                     element={
-                        <div className="flex min-h-screen items-center justify-center bg-[#050816] text-white">
+                        <div className="
+                            flex
+                            min-h-screen
+                            items-center
+                            justify-center
+                            bg-[#050816]
+                            px-6
+                            text-center
+                            text-white
+                        ">
                             404 — Page Not Found
                         </div>
                     }
@@ -162,6 +205,7 @@ const AppRoutes = () => {
 
         </BrowserRouter>
     );
+
 };
 
 

@@ -7,7 +7,8 @@ import {
     update,
     publish,
     unpublish,
-    remove
+    remove,
+    uploadResume
 } from "../controllers/portfolio/portfolio.controller.js";
 
 import authMiddleware from "../middleware/auth.middleware.js";
@@ -18,6 +19,8 @@ import {
     createPortfolioSchema,
     updatePortfolioSchema
 } from "../validators/portfolio.validator.js";
+
+import portfolioUpload from "../middleware/portfolioUpload.middleware.js";
 
 
 const router = express.Router();
@@ -53,6 +56,19 @@ router.get(
 router.get(
     "/public/:slug",
     getPublic
+);
+
+
+// ========================================
+// UPLOAD RESUME
+// IMPORTANT: KEEP BEFORE PARAMETER ROUTES
+// ========================================
+
+router.post(
+    "/resume/upload",
+    authMiddleware,
+    portfolioUpload.single("resume"),
+    uploadResume
 );
 
 

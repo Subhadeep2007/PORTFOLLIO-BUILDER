@@ -1,8 +1,17 @@
 import {
     useEffect,
-    useRef
+    useRef,
+    useState
 } from "react";
 
+import {
+    uploadResume
+} from "../api/portfolio.api";
+
+
+// ========================================
+// INPUT COMPONENT
+// ========================================
 
 const Input = ({
     label,
@@ -17,7 +26,15 @@ const Input = ({
 
         <div>
 
-            <label className="mb-2 block text-sm font-medium text-slate-300">
+            <label
+                className="
+                    mb-2
+                    block
+                    text-sm
+                    font-medium
+                    text-slate-300
+                "
+            >
                 {label}
             </label>
 
@@ -31,26 +48,50 @@ const Input = ({
                     )
                 }
                 placeholder={placeholder}
-                className={`w-full rounded-xl border bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:ring-1 ${
-                    error
-                        ? "border-red-400/50 focus:border-red-400/60 focus:ring-red-400/10"
-                        : "border-white/10 focus:border-cyan-400/40 focus:ring-cyan-400/20"
-                }`}
+                className={`
+                    w-full
+                    rounded-xl
+                    border
+                    bg-[#070b16]
+                    px-4
+                    py-3
+                    text-sm
+                    text-white
+                    outline-none
+                    placeholder:text-slate-600
+                    focus:ring-1
+                    ${
+                        error
+                            ? "border-red-400/50 focus:border-red-400/60 focus:ring-red-400/10"
+                            : "border-white/10 focus:border-cyan-400/40 focus:ring-cyan-400/20"
+                    }
+                `}
             />
 
 
-            {error && (
+            {error ? (
 
-                <p className="mt-1.5 text-[11px] text-red-300">
+                <p
+                    className="
+                        mt-1.5
+                        text-[11px]
+                        text-red-300
+                    "
+                >
                     {error}
                 </p>
 
-            )}
+            ) : null}
 
         </div>
+
     );
 };
 
+
+// ========================================
+// PROFILE SETTINGS
+// ========================================
 
 const ProfileSettings = ({
     form,
@@ -59,40 +100,73 @@ const ProfileSettings = ({
     fieldErrors
 }) => {
 
+    // ========================================
+    // PROFILE IMAGE
+    // ========================================
+
     const fileInputRef =
         useRef(null);
 
 
     // ========================================
-    // OPEN FILE PICKER
+    // RESUME
+    // ========================================
+
+    const resumeInputRef =
+        useRef(null);
+
+
+    const [
+        uploadingResume,
+        setUploadingResume
+    ] = useState(false);
+
+
+    const [
+        resumeUploadError,
+        setResumeUploadError
+    ] = useState("");
+
+
+    // ========================================
+    // OPEN PROFILE IMAGE PICKER
     // ========================================
 
     const openFilePicker = () => {
 
-        fileInputRef.current?.click();
+        if (
+            fileInputRef.current
+        ) {
+
+            fileInputRef.current.click();
+
+        }
 
     };
 
 
     // ========================================
-    // IMAGE SELECT
+    // PROFILE IMAGE SELECT
     // ========================================
 
     const handleProfileImage =
         (event) => {
 
             const file =
-                event.target.files?.[0];
+                event.target.files &&
+                event.target.files[0];
 
 
             if (!file) {
+
                 return;
+
             }
 
 
-            // --------------------------------
-            // IMAGE VALIDATION
-            // --------------------------------
+            // ========================================
+            // IMAGE TYPE
+            // ========================================
 
             if (
                 !file.type.startsWith(
@@ -100,35 +174,48 @@ const ProfileSettings = ({
                 )
             ) {
 
+                alert(
+                    "Please select an image file."
+                );
+
+                event.target.value =
+                    "";
+
                 return;
+
             }
 
 
-            // --------------------------------
-            // SIZE LIMIT
-            // --------------------------------
+            // ========================================
+            // SIZE
+            // ========================================
 
             const maxSize =
-                5 * 1024 * 1024;
+                5 *
+                1024 *
+                1024;
 
 
             if (
-                file.size > maxSize
+                file.size >
+                maxSize
             ) {
 
                 alert(
                     "Profile image must be less than 5MB."
                 );
 
-                event.target.value = "";
+                event.target.value =
+                    "";
 
                 return;
+
             }
 
 
-            // --------------------------------
-            // FILE -> DATA URL
-            // --------------------------------
+            // ========================================
+            // FILE READER
+            // ========================================
 
             const reader =
                 new FileReader();
@@ -141,22 +228,13 @@ const ProfileSettings = ({
                     "string"
                 ) {
 
-                    /*
-                     * IMPORTANT:
-                     *
-                     * Save image inside parent
-                     * form state.
-                     *
-                     * Live preview gets it.
-                     * Save sends it to backend.
-                     * Refresh loads it again.
-                     */
-
                     onChange(
                         "profileImage",
                         reader.result
                     );
+
                 }
+
             };
 
 
@@ -168,16 +246,243 @@ const ProfileSettings = ({
 
 
     // ========================================
-    // RESET FILE INPUT
+    // OPEN RESUME PICKER
+    // ========================================
+
+    const openResumePicker = () => {
+
+        if (
+            resumeInputRef.current
+        ) {
+
+            resumeInputRef.current.click();
+
+        }
+
+    };
+
+
+    // ========================================
+    // RESUME UPLOAD
+    // ========================================
+
+    const handleResumeUpload =
+        async (event) => {
+
+            const file =
+                event.target.files &&
+                event.target.files[0];
+
+
+            if (!file) {
+
+                return;
+
+            }
+
+
+            setResumeUploadError(
+                ""
+            );
+
+
+            // ========================================
+            // ALLOWED FILE TYPES
+            // ========================================
+
+            const allowedTypes = [
+
+                "application/pdf",
+
+                "application/msword",
+
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+            ];
+
+
+            if (
+                !allowedTypes.includes(
+                    file.type
+                )
+            ) {
+
+                setResumeUploadError(
+                    "Only PDF, DOC and DOCX files are allowed."
+                );
+
+                event.target.value =
+                    "";
+
+                return;
+
+            }
+
+
+            // ========================================
+            // MAX 10MB
+            // ========================================
+
+            const maxSize =
+                10 *
+                1024 *
+                1024;
+
+
+            if (
+                file.size >
+                maxSize
+            ) {
+
+                setResumeUploadError(
+                    "Resume must be less than 10MB."
+                );
+
+                event.target.value =
+                    "";
+
+                return;
+
+            }
+
+
+            try {
+
+                setUploadingResume(
+                    true
+                );
+
+
+                // ========================================
+                // API UPLOAD
+                // ========================================
+
+                const response =
+                    await uploadResume(
+                        file
+                    );
+
+
+                const uploaded =
+                    response.data;
+
+
+                if (
+                    !uploaded ||
+                    !uploaded.url
+                ) {
+
+                    throw new Error(
+                        "Resume upload failed. URL was not received."
+                    );
+
+                }
+
+
+                // ========================================
+                // SAVE URL
+                // ========================================
+
+                onNestedChange(
+                    "resume",
+                    "url",
+                    uploaded.url
+                );
+
+
+                // ========================================
+                // SAVE PUBLIC ID
+                // ========================================
+
+                onNestedChange(
+                    "resume",
+                    "publicId",
+                    uploaded.publicId ||
+                    ""
+                );
+
+
+                // ========================================
+                // SAVE FILE NAME
+                // ========================================
+
+                onNestedChange(
+                    "resume",
+                    "fileName",
+                    uploaded.fileName ||
+                    file.name
+                );
+
+
+                setResumeUploadError(
+                    ""
+                );
+
+            } catch (error) {
+
+                if (
+                    error.response &&
+                    error.response.data &&
+                    error.response.data.message
+                ) {
+
+                    setResumeUploadError(
+                        error.response.data.message
+                    );
+
+                } else if (
+                    error.message
+                ) {
+
+                    setResumeUploadError(
+                        error.message
+                    );
+
+                } else {
+
+                    setResumeUploadError(
+                        "Resume upload failed."
+                    );
+
+                }
+
+            } finally {
+
+                setUploadingResume(
+                    false
+                );
+
+                event.target.value =
+                    "";
+
+            }
+
+        };
+
+
+    // ========================================
+    // RESET FILE INPUTS
     // ========================================
 
     useEffect(() => {
 
         return () => {
 
-            if (fileInputRef.current) {
+            if (
+                fileInputRef.current
+            ) {
 
                 fileInputRef.current.value =
+                    "";
+
+            }
+
+
+            if (
+                resumeInputRef.current
+            ) {
+
+                resumeInputRef.current.value =
                     "";
 
             }
@@ -189,30 +494,59 @@ const ProfileSettings = ({
 
     return (
 
-        <div className="space-y-5">
-
+        <div
+            className="
+                space-y-5
+            "
+        >
 
             {/* ==================================
                 PROFILE IMAGE
             ================================== */}
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div
+                className="
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-white/[0.02]
+                    p-4
+                "
+            >
 
-                <p className="text-sm font-semibold text-white">
+                <p
+                    className="
+                        text-sm
+                        font-semibold
+                        text-white
+                    "
+                >
                     Profile Image
                 </p>
 
-                <p className="mt-1 text-[11px] leading-5 text-slate-500">
+
+                <p
+                    className="
+                        mt-1
+                        text-[11px]
+                        leading-5
+                        text-slate-500
+                    "
+                >
                     Click the image to choose a profile picture.
                 </p>
 
 
-                {/* HIDDEN FILE INPUT */}
+                {/* HIDDEN INPUT */}
 
                 <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="
+                        image/png,
+                        image/jpeg,
+                        image/webp
+                    "
                     onChange={
                         handleProfileImage
                     }
@@ -227,7 +561,25 @@ const ProfileSettings = ({
                     onClick={
                         openFilePicker
                     }
-                    className="group relative mt-5 block h-32 w-32 overflow-hidden rounded-full border-2 border-cyan-400/30 bg-cyan-400/5 text-3xl font-black text-cyan-300 transition hover:border-cyan-400/60 hover:shadow-[0_0_40px_rgba(34,211,238,0.18)]"
+                    className="
+                        group
+                        relative
+                        mt-5
+                        block
+                        h-32
+                        w-32
+                        overflow-hidden
+                        rounded-full
+                        border-2
+                        border-cyan-400/30
+                        bg-cyan-400/5
+                        text-3xl
+                        font-black
+                        text-cyan-300
+                        transition
+                        hover:border-cyan-400/60
+                        hover:shadow-[0_0_40px_rgba(34,211,238,0.18)]
+                    "
                 >
 
                     {form.profileImage ? (
@@ -240,7 +592,11 @@ const ProfileSettings = ({
                                 form.title ||
                                 "Profile"
                             }
-                            className="h-full w-full object-cover"
+                            className="
+                                h-full
+                                w-full
+                                object-cover
+                            "
                         />
 
                     ) : (
@@ -257,9 +613,27 @@ const ProfileSettings = ({
 
                     {/* HOVER */}
 
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
+                    <div
+                        className="
+                            absolute
+                            inset-0
+                            flex
+                            items-center
+                            justify-center
+                            bg-black/50
+                            opacity-0
+                            transition
+                            group-hover:opacity-100
+                        "
+                    >
 
-                        <span className="text-[10px] font-bold text-white">
+                        <span
+                            className="
+                                text-[10px]
+                                font-bold
+                                text-white
+                            "
+                        >
                             Change Image
                         </span>
 
@@ -272,13 +646,25 @@ const ProfileSettings = ({
 
                 {form.profileImage ? (
 
-                    <p className="mt-3 text-[11px] text-emerald-300">
+                    <p
+                        className="
+                            mt-3
+                            text-[11px]
+                            text-emerald-300
+                        "
+                    >
                         ✓ Profile image selected
                     </p>
 
                 ) : (
 
-                    <p className="mt-3 text-[11px] text-slate-600">
+                    <p
+                        className="
+                            mt-3
+                            text-[11px]
+                            text-slate-600
+                        "
+                    >
                         PNG, JPG or WEBP · Max 5MB
                     </p>
 
@@ -377,56 +763,251 @@ const ProfileSettings = ({
                 RESUME
             ================================== */}
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+            <div
+                className="
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-white/[0.02]
+                    p-4
+                "
+            >
 
-                <p className="text-sm font-semibold text-white">
+                <p
+                    className="
+                        text-sm
+                        font-semibold
+                        text-white
+                    "
+                >
                     Resume
                 </p>
 
-                <p className="mt-1 text-[11px] leading-5 text-slate-500">
-                    Resume is optional.
+
+                <p
+                    className="
+                        mt-1
+                        text-[11px]
+                        leading-5
+                        text-slate-500
+                    "
+                >
+                    Upload your resume. Visitors can open it from your portfolio.
                 </p>
 
 
-                <div className="mt-4 space-y-4">
+                {/* ==================================
+                    HIDDEN RESUME INPUT
+                ================================== */}
 
-                    <Input
-                        label="Resume URL"
-                        value={
-                            form.resume.url
-                        }
-                        onChange={(value) =>
-                            onNestedChange(
-                                "resume",
-                                "url",
-                                value
-                            )
-                        }
-                        placeholder="https://..."
-                    />
+                <input
+                    ref={
+                        resumeInputRef
+                    }
+                    type="file"
+                    accept="
+                        .pdf,
+                        .doc,
+                        .docx
+                    "
+                    onChange={
+                        handleResumeUpload
+                    }
+                    className="hidden"
+                />
 
 
-                    <Input
-                        label="File Name"
-                        value={
-                            form.resume.fileName
-                        }
-                        onChange={(value) =>
-                            onNestedChange(
-                                "resume",
-                                "fileName",
-                                value
-                            )
-                        }
-                        placeholder="resume.pdf"
-                    />
+                {/* ==================================
+                    UPLOAD BUTTON
+                ================================== */}
 
-                </div>
+                <button
+                    type="button"
+                    onClick={
+                        openResumePicker
+                    }
+                    disabled={
+                        uploadingResume
+                    }
+                    className="
+                        mt-4
+                        w-full
+                        rounded-xl
+                        border
+                        border-cyan-400/20
+                        bg-cyan-400/5
+                        px-4
+                        py-3
+                        text-sm
+                        font-semibold
+                        text-cyan-300
+                        transition
+                        hover:border-cyan-400/40
+                        hover:bg-cyan-400/10
+                        disabled:cursor-not-allowed
+                        disabled:opacity-50
+                    "
+                >
+
+                    {uploadingResume
+                        ? "Uploading Resume..."
+                        : "Upload Resume"}
+
+                </button>
+
+
+                {/* ==================================
+                    UPLOADED RESUME
+                ================================== */}
+
+                {form.resume &&
+                form.resume.url ? (
+
+                    <div
+                        className="
+                            mt-4
+                            flex
+                            items-center
+                            justify-between
+                            gap-3
+                            rounded-xl
+                            border
+                            border-white/10
+                            bg-[#070b16]
+                            p-3
+                        "
+                    >
+
+                        <div
+                            className="
+                                flex
+                                min-w-0
+                                items-center
+                                gap-3
+                            "
+                        >
+
+                            <div
+                                className="
+                                    flex
+                                    h-10
+                                    w-10
+                                    shrink-0
+                                    items-center
+                                    justify-center
+                                    rounded-lg
+                                    bg-cyan-400/10
+                                    text-lg
+                                "
+                            >
+                                📄
+                            </div>
+
+
+                            <div
+                                className="
+                                    min-w-0
+                                "
+                            >
+
+                                <p
+                                    className="
+                                        truncate
+                                        text-sm
+                                        font-medium
+                                        text-white
+                                    "
+                                >
+                                    {
+                                        form.resume.fileName ||
+                                        "Resume"
+                                    }
+                                </p>
+
+
+                                <p
+                                    className="
+                                        mt-1
+                                        text-[10px]
+                                        text-emerald-300
+                                    "
+                                >
+                                    ✓ Resume uploaded
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* OPEN RESUME */}
+
+                        <a
+                            href={
+                                form.resume.url
+                            }
+                            target="_blank"
+                            rel="noreferrer"
+                            className="
+                                shrink-0
+                                rounded-lg
+                                border
+                                border-cyan-400/20
+                                px-3
+                                py-2
+                                text-xs
+                                font-semibold
+                                text-cyan-300
+                                transition
+                                hover:bg-cyan-400/10
+                            "
+                        >
+                            Open ↗
+                        </a>
+
+                    </div>
+
+                ) : (
+
+                    <p
+                        className="
+                            mt-3
+                            text-[11px]
+                            text-slate-600
+                        "
+                    >
+                        PDF, DOC or DOCX · Max 10MB
+                    </p>
+
+                )}
+
+
+                {/* ==================================
+                    ERROR
+                ================================== */}
+
+                {resumeUploadError ? (
+
+                    <p
+                        className="
+                            mt-2
+                            text-[11px]
+                            text-red-300
+                        "
+                    >
+                        {
+                            resumeUploadError
+                        }
+                    </p>
+
+                ) : null}
 
             </div>
 
         </div>
+
     );
+
 };
 
 

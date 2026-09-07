@@ -2273,71 +2273,6 @@ const LivePortfolioPreview = ({
         (item) => item.href
     );
 
-    // ========================================
-    // LOADING
-    // ========================================
-
-    if (loading) {
-        return (
-            <section
-                className="
-                    min-w-0
-                    rounded-3xl
-                    border
-                    border-white/10
-                    bg-[#070b16]
-                    p-3
-                    shadow-2xl
-                    sm:p-4
-                "
-            >
-                <div
-                    className="
-                        flex
-                        min-h-[700px]
-                        items-center
-                        justify-center
-                        rounded-2xl
-                        border
-                        border-white/10
-                        bg-[#020712]
-                    "
-                >
-                    <div
-                        className="
-                            flex
-                            flex-col
-                            items-center
-                            gap-4
-                        "
-                    >
-                        <div
-                            className="
-                                h-10
-                                w-10
-                                animate-spin
-                                rounded-full
-                                border-2
-                                border-cyan-400/20
-                                border-t-cyan-400
-                            "
-                        />
-
-                        <p
-                            className="
-                                text-sm
-                                text-slate-500
-                            "
-                        >
-                            Loading live
-                            portfolio...
-                        </p>
-                    </div>
-                </div>
-            </section>
-        );
-    }
-
     return (
         <section
             className="
@@ -2793,6 +2728,147 @@ const LivePortfolioPreview = ({
                                 </a>
                             ) : null}
                         </div>
+
+                        {/* PROFILE CONTACT DETAILS */}
+
+                        {form.email ||
+                        form.phone ||
+                        form.website ? (
+                            <div
+                                className="
+                                    mt-6
+                                    grid
+                                    grid-cols-1
+                                    gap-2
+                                    sm:grid-cols-2
+                                "
+                            >
+                                {form.email ? (
+                                    <a
+                                        href={`mailto:${form.email}`}
+                                        className="
+                                            rounded-xl
+                                            border
+                                            border-white/10
+                                            bg-white/[0.03]
+                                            px-4
+                                            py-3
+                                            text-xs
+                                            text-slate-300
+                                            transition
+                                            hover:bg-white/[0.06]
+                                        "
+                                    >
+                                        <span
+                                            className="
+                                                block
+                                                text-[10px]
+                                                font-bold
+                                                uppercase
+                                                tracking-[0.15em]
+                                                text-slate-600
+                                            "
+                                        >
+                                            Email
+                                        </span>
+
+                                        <span
+                                            className="
+                                                mt-1
+                                                block
+                                                break-all
+                                            "
+                                        >
+                                            {form.email}
+                                        </span>
+                                    </a>
+                                ) : null}
+
+                                {form.phone ? (
+                                    <a
+                                        href={`tel:${form.phone}`}
+                                        className="
+                                            rounded-xl
+                                            border
+                                            border-white/10
+                                            bg-white/[0.03]
+                                            px-4
+                                            py-3
+                                            text-xs
+                                            text-slate-300
+                                            transition
+                                            hover:bg-white/[0.06]
+                                        "
+                                    >
+                                        <span
+                                            className="
+                                                block
+                                                text-[10px]
+                                                font-bold
+                                                uppercase
+                                                tracking-[0.15em]
+                                                text-slate-600
+                                            "
+                                        >
+                                            Phone
+                                        </span>
+
+                                        <span
+                                            className="
+                                                mt-1
+                                                block
+                                            "
+                                        >
+                                            {form.phone}
+                                        </span>
+                                    </a>
+                                ) : null}
+
+                                {form.website ? (
+                                    <a
+                                        href={form.website}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="
+                                            rounded-xl
+                                            border
+                                            border-white/10
+                                            bg-white/[0.03]
+                                            px-4
+                                            py-3
+                                            text-xs
+                                            text-slate-300
+                                            transition
+                                            hover:bg-white/[0.06]
+                                            sm:col-span-2
+                                        "
+                                    >
+                                        <span
+                                            className="
+                                                block
+                                                text-[10px]
+                                                font-bold
+                                                uppercase
+                                                tracking-[0.15em]
+                                                text-slate-600
+                                            "
+                                        >
+                                            Website
+                                        </span>
+
+                                        <span
+                                            className="
+                                                mt-1
+                                                block
+                                                break-all
+                                            "
+                                        >
+                                            {form.website}
+                                        </span>
+                                    </a>
+                                ) : null}
+                            </div>
+                        ) : null}
                     </div>
 
                     {/* PROFILE IMAGE */}

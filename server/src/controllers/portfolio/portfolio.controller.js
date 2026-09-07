@@ -8,7 +8,32 @@ import {
     deletePortfolio
 } from "../../services/portfolio/portfolio.service.js";
 
+import uploadPortfolioResume from "../../services/portfolio/portfolioResume.service.js";
+export const uploadResume = async(req, res, next) => {
+    try {
+        if (!req.file) {
+            const error = new Error("Resume file was not received");
+            error.statusCode = 400;
+            throw error;
+        }
 
+        const result = await uploadPortfolioResume(req.file);
+
+        return res.status(200).json({
+            success: true,
+            message: "Resume uploaded successfully",
+            data: {
+                url: result.url,
+                publicId: result.publicId,
+                fileName: result.fileName,
+                mimeType: result.mimeType,
+                size: result.size
+            }
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 // ========================================
 // CREATE PORTFOLIO
 // ========================================
@@ -278,6 +303,7 @@ export {
 
     unpublish,
 
-    remove
+    remove,
+
 
 };

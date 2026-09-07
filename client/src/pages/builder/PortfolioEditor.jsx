@@ -5,7 +5,8 @@ import {
 } from "react";
 
 import {
-    Link
+    Link,
+    useNavigate
 } from "react-router-dom";
 
 import {
@@ -19,6 +20,10 @@ import {
 import BuilderSidebar from "../../components/BuilderSidebar";
 import LivePortfolioPreview from "../../components/LivePortfolioPreview";
 import ValidationSummary from "../../components/ValidationSummary";
+
+import {
+    deletePortfolio
+} from "../../api/portfolio.api";
 
 // ========================================
 // INITIAL FORM
@@ -413,6 +418,8 @@ const normalizeApiErrors = (error) => {
 
 const PortfolioEditor = () => {
 
+    const navigate = useNavigate();
+
     const {
         user
     } = useAuth();
@@ -453,6 +460,16 @@ const PortfolioEditor = () => {
         message,
         setMessage
     ] = useState("");
+
+    const [
+        linkCopied,
+        setLinkCopied
+    ] = useState(false);
+
+    const [
+        deleting,
+        setDeleting
+    ] = useState(false);
 
 
     // ====================================
@@ -915,6 +932,64 @@ const PortfolioEditor = () => {
 
 
     // ====================================
+    // DELETE PORTFOLIO
+    // ====================================
+
+    const handleDeletePortfolio = async () => {
+
+        if (!portfolio || deleting) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            "Delete your portfolio permanently? This action cannot be undone."
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+
+            setDeleting(true);
+            setMessage("");
+            setFieldErrors({});
+
+            await deletePortfolio();
+
+            window.alert(
+                "Portfolio deleted successfully."
+            );
+
+            navigate(
+                "/dashboard",
+                {
+                    replace: true
+                }
+            );
+
+        } catch (deleteError) {
+
+            const errors =
+                normalizeApiErrors(
+                    deleteError
+                );
+
+            setFieldErrors(errors);
+
+            setMessage(
+                errors._global ||
+                "Failed to delete portfolio."
+            );
+
+        } finally {
+
+            setDeleting(false);
+        }
+    };
+
+
+    // ====================================
     // GLOBAL ERROR
     // ====================================
 
@@ -1027,10 +1102,23 @@ const PortfolioEditor = () => {
                             </span>
 
 
+                            {portfolio ? (
+                                <button
+                                    type="button"
+                                    onClick={handleDeletePortfolio}
+                                    disabled={saving || deleting}
+                                    className="rounded-xl border border-red-400/20 bg-red-500/5 px-4 py-2.5 text-sm font-bold text-red-300 transition hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {deleting
+                                        ? "Deleting..."
+                                        : "Delete Portfolio"}
+                                </button>
+                            ) : null}
+
                             <button
                                 type="button"
                                 onClick={handleSave}
-                                disabled={saving}
+                                disabled={saving || deleting}
                                 className="rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {saving
@@ -1066,6 +1154,95 @@ const PortfolioEditor = () => {
                             </div>
 
                         )}
+
+
+                    {form.isPublished &&
+                    (form.slug.trim() ||
+                        form.username.trim()) ? (
+
+                        <section className="mb-5 overflow-hidden rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-emerald-400/10 via-cyan-400/5 to-transparent p-5 shadow-[0_0_40px_rgba(16,185,129,0.06)]">
+
+                            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+                                <div className="min-w-0">
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)]" />
+
+                                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
+                                            Portfolio Published
+                                        </p>
+                                    </div>
+
+                                    <h2 className="mt-2 text-lg font-bold text-white sm:text-xl">
+                                        Your portfolio is live
+                                    </h2>
+
+                                    <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
+                                        Anyone can open this link without logging in.
+                                    </p>
+
+                                    <div className="mt-4 rounded-xl border border-white/10 bg-black/20 px-3 py-3">
+                                        <p className="break-all text-xs text-slate-300 sm:text-sm">
+                                            {`${window.location.origin}/portfolio/${(form.slug || form.username).trim()}`}
+                                        </p>
+                                    </div>
+
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 lg:shrink-0">
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const publicSlug =
+                                                (form.slug || form.username).trim();
+
+                                            if (!publicSlug) {
+                                                return;
+                                            }
+
+                                            const publicUrl =
+                                                `${window.location.origin}/portfolio/${publicSlug}`;
+
+                                            navigator.clipboard
+                                                .writeText(publicUrl)
+                                                .then(() => {
+                                                    setLinkCopied(true);
+
+                                                    window.setTimeout(() => {
+                                                        setLinkCopied(false);
+                                                    }, 1800);
+                                                })
+                                                .catch(() => {
+                                                    setMessage(
+                                                        "Unable to copy the portfolio link."
+                                                    );
+                                                });
+                                        }}
+                                        className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/30 hover:bg-cyan-400/5 hover:text-cyan-300"
+                                    >
+                                        {linkCopied
+                                            ? "Copied ✓"
+                                            : "Copy Link"}
+                                    </button>
+
+                                    <a
+                                        href={`/portfolio/${(form.slug || form.username).trim()}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex items-center justify-center rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-cyan-300"
+                                    >
+                                        Open Portfolio ↗
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                    ) : null}
 
 
                     <ValidationSummary
