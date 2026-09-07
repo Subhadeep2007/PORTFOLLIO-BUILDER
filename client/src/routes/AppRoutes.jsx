@@ -5,6 +5,9 @@ import {
 } from "react-router-dom";
 
 
+import Home
+    from "../pages/Home";
+
 import Login
     from "../pages/auth/Login";
 
@@ -89,6 +92,15 @@ const AppRoutes = () => {
         <BrowserRouter>
 
             <Routes>
+
+
+                {/* ================= HOME ================= */}
+
+                <Route
+                    path="/"
+                    element={<Home />}
+                />
+
 
                 {/* ================= AUTH ================= */}
 
