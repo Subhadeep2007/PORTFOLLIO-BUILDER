@@ -66,9 +66,7 @@ Resume
 
 SEO information
 
-Portfolio theme
 
-Portfolio template
 
 Section visibility
 
