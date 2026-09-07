@@ -33,6 +33,22 @@ import Dashboard
 import AdminDashboard
     from "../pages/admin/AdminDashboard";
 
+import AdminUsers
+    from "../pages/admin/AdminUsers";
+
+import AdminUserDetails
+    from "../pages/admin/AdminUserDetails";
+
+import AdminPortfolios
+    from "../pages/admin/AdminPortfolios";
+
+import AdminPortfolioDetails
+    from "../pages/admin/AdminPortfolioDetails";
+
+
+import AdminLayout
+    from "../components/admin/AdminLayout";
+
 
 import PortfolioEditor
     from "../pages/builder/PortfolioEditor";
@@ -175,8 +191,45 @@ const AppRoutes = () => {
 
                     <Route
                         path="/admin"
-                        element={<AdminDashboard />}
-                    />
+                        element={<AdminLayout />}
+                    >
+
+                        <Route
+                            index
+                            element={
+                                <AdminDashboard />
+                            }
+                        />
+
+                        <Route
+                            path="users"
+                            element={
+                                <AdminUsers />
+                            }
+                        />
+
+                        <Route
+                            path="users/:userId"
+                            element={
+                                <AdminUserDetails />
+                            }
+                        />
+
+                        <Route
+                            path="portfolios"
+                            element={
+                                <AdminPortfolios />
+                            }
+                        />
+
+                        <Route
+                            path="portfolios/:portfolioId"
+                            element={
+                                <AdminPortfolioDetails />
+                            }
+                        />
+
+                    </Route>
 
                 </Route>
 
@@ -186,16 +239,18 @@ const AppRoutes = () => {
                 <Route
                     path="*"
                     element={
-                        <div className="
-                            flex
-                            min-h-screen
-                            items-center
-                            justify-center
-                            bg-[#050816]
-                            px-6
-                            text-center
-                            text-white
-                        ">
+                        <div
+                            className="
+                                flex
+                                min-h-screen
+                                items-center
+                                justify-center
+                                bg-[#050816]
+                                px-6
+                                text-center
+                                text-white
+                            "
+                        >
                             404 — Page Not Found
                         </div>
                     }

@@ -628,7 +628,126 @@ const Dashboard = () => {
                 </section>
 
 
-                {/* QUICK ACTIONS */}
+
+
+                {/* ========================================
+                    PASSWORD ACTIONS
+                ======================================== */}
+
+                <section className="
+                    mb-10
+                    rounded-2xl
+                    border
+                    border-white/10
+                    bg-[#0b1020]/80
+                    p-5
+                    backdrop-blur-xl
+                ">
+
+                    <div className="
+                        flex
+                        flex-col
+                        gap-4
+                        sm:flex-row
+                        sm:items-center
+                        sm:justify-between
+                    ">
+
+                        <div>
+
+                            <p className="
+                                text-[10px]
+                                font-bold
+                                uppercase
+                                tracking-[0.2em]
+                                text-cyan-400
+                            ">
+                                Account Security
+                            </p>
+
+                            <h2 className="
+                                mt-1
+                                text-lg
+                                font-semibold
+                                text-white
+                            ">
+                                Password Management
+                            </h2>
+
+                            <p className="
+                                mt-1
+                                text-sm
+                                text-slate-500
+                            ">
+                                Manage your account password.
+                            </p>
+
+                        </div>
+
+                        <div className="
+                            flex
+                            w-full
+                            flex-col
+                            gap-3
+                            sm:w-auto
+                            sm:flex-row
+                        ">
+
+                            <Link
+                                to="/forgot-password"
+                                className="
+                                    inline-flex
+                                    items-center
+                                    justify-center
+                                    rounded-xl
+                                    border
+                                    border-cyan-400/20
+                                    bg-cyan-400/5
+                                    px-4
+                                    py-2.5
+                                    text-sm
+                                    font-semibold
+                                    text-cyan-300
+                                    transition
+                                    hover:border-cyan-400/40
+                                    hover:bg-cyan-400/10
+                                "
+                            >
+                                Forgot Password
+                            </Link>
+
+                            <Link
+                                to="/reset-password"
+                                className="
+                                    inline-flex
+                                    items-center
+                                    justify-center
+                                    rounded-xl
+                                    border
+                                    border-white/10
+                                    bg-white/[0.03]
+                                    px-4
+                                    py-2.5
+                                    text-sm
+                                    font-semibold
+                                    text-slate-200
+                                    transition
+                                    hover:border-white/20
+                                    hover:bg-white/[0.06]
+                                    hover:text-white
+                                "
+                            >
+                                Reset Password
+                            </Link>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                                {/* QUICK ACTIONS */}
 
                 <section className="mb-10">
 

@@ -105,6 +105,25 @@ const getDashboardStats = async() => {
         }
 
     };
+
+};
+
+
+// ========================================
+// USER SELECT
+// ========================================
+
+const getSafeUserQuery = (query) => {
+
+    return query.select(
+        "-password " +
+        "-refreshToken " +
+        "-emailVerificationOTP " +
+        "-emailVerificationOTPExpire " +
+        "-resetPasswordOTP " +
+        "-resetPasswordOTPExpire"
+    );
+
 };
 
 
@@ -128,15 +147,69 @@ const getAllUsers = async() => {
         )
         .sort({
             createdAt: -1
-        });
+        })
+        .lean();
 
 
-    return users;
+    const userIds =
+        users.map(
+            (user) => user._id
+        );
+
+
+    const portfolios =
+        await Portfolio.find({
+            owner: {
+                $in: userIds
+            }
+        })
+        .select(
+            "owner title headline username slug " +
+            "profileImage isPublished isActive views " +
+            "theme template createdAt updatedAt"
+        )
+        .sort({
+            createdAt: -1
+        })
+        .lean();
+
+
+    const portfolioMap =
+        new Map();
+
+
+    portfolios.forEach(
+        (portfolio) => {
+
+            portfolioMap.set(
+                String(portfolio.owner),
+                portfolio
+            );
+
+        }
+    );
+
+
+    return users.map(
+        (user) => {
+
+            return {
+                ...user,
+
+                portfolio: portfolioMap.get(
+                    String(user._id)
+                ) || null
+            };
+
+        }
+    );
+
 };
 
 
 // ========================================
 // GET USER BY ID
+// COMPLETE PROFILE + PORTFOLIO
 // ========================================
 
 const getUserById = async(
@@ -155,16 +228,14 @@ const getUserById = async(
         error.statusCode = 400;
 
         throw error;
+
     }
 
 
     const user =
         await User.findOne({
-
             _id: userId,
-
             role: "user"
-
         })
         .select(
             "-password " +
@@ -173,7 +244,8 @@ const getUserById = async(
             "-emailVerificationOTPExpire " +
             "-resetPasswordOTP " +
             "-resetPasswordOTPExpire"
-        );
+        )
+        .lean();
 
 
     if (!user) {
@@ -186,10 +258,125 @@ const getUserById = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
-    return user;
+    const portfolio =
+        await Portfolio.findOne({
+            owner: user._id
+        })
+        .lean();
+
+
+    if (!portfolio) {
+
+        return {
+
+            user,
+
+            portfolio: null,
+
+            projects: [],
+            skills: [],
+            experiences: [],
+            education: [],
+            certificates: [],
+            posts: []
+
+        };
+
+    }
+
+
+    const [
+
+        projects,
+        skills,
+        experiences,
+        education,
+        certificates,
+        posts
+
+    ] = await Promise.all([
+
+        Project.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Skill.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Experience.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Education.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Certificate.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Post.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean()
+
+    ]);
+
+
+    return {
+
+        user,
+
+        portfolio,
+
+        projects,
+
+        skills,
+
+        experiences,
+
+        education,
+
+        certificates,
+
+        posts
+
+    };
+
 };
 
 
@@ -213,16 +400,14 @@ const activateUser = async(
         error.statusCode = 400;
 
         throw error;
+
     }
 
 
     const user =
         await User.findOne({
-
             _id: userId,
-
             role: "user"
-
         });
 
 
@@ -236,12 +421,7 @@ const activateUser = async(
         error.statusCode = 404;
 
         throw error;
-    }
 
-
-    if (user.isActive) {
-
-        return user;
     }
 
 
@@ -249,8 +429,8 @@ const activateUser = async(
 
     await user.save();
 
-
     return user;
+
 };
 
 
@@ -274,16 +454,14 @@ const deactivateUser = async(
         error.statusCode = 400;
 
         throw error;
+
     }
 
 
     const user =
         await User.findOne({
-
             _id: userId,
-
             role: "user"
-
         });
 
 
@@ -297,12 +475,7 @@ const deactivateUser = async(
         error.statusCode = 404;
 
         throw error;
-    }
 
-
-    if (!user.isActive) {
-
-        return user;
     }
 
 
@@ -310,8 +483,8 @@ const deactivateUser = async(
 
     await user.save();
 
-
     return user;
+
 };
 
 
@@ -335,20 +508,14 @@ const deleteUser = async(
         error.statusCode = 400;
 
         throw error;
+
     }
 
 
-    // ====================================
-    // FIND USER
-    // ====================================
-
     const user =
         await User.findOne({
-
             _id: userId,
-
             role: "user"
-
         });
 
 
@@ -362,12 +529,9 @@ const deleteUser = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
-
-    // ====================================
-    // START TRANSACTION
-    // ====================================
 
     const session =
         await mongoose.startSession();
@@ -378,19 +542,12 @@ const deleteUser = async(
         let deletedData = {
 
             projects: 0,
-
             skills: 0,
-
             experiences: 0,
-
             education: 0,
-
             certificates: 0,
-
             posts: 0,
-
             portfolios: 0,
-
             users: 0
 
         };
@@ -399,19 +556,13 @@ const deleteUser = async(
         await session.withTransaction(
             async() => {
 
-                // =========================
-                // FIND PORTFOLIO
-                // =========================
-
                 const portfolio =
                     await Portfolio.findOne({
                         owner: user._id
-                    }).session(session);
+                    }).session(
+                        session
+                    );
 
-
-                // =========================
-                // DELETE PORTFOLIO DATA
-                // =========================
 
                 if (portfolio) {
 
@@ -419,41 +570,27 @@ const deleteUser = async(
                         portfolio._id;
 
 
-                    // =====================
-                    // PROJECTS
-                    // =====================
-
-                    const projectsResult =
+                    const projectResult =
                         await Project.deleteMany({
                             portfolio: portfolioId
                         }, {
                             session
                         });
 
-
                     deletedData.projects =
-                        projectsResult.deletedCount || 0;
+                        projectResult.deletedCount || 0;
 
 
-                    // =====================
-                    // SKILLS
-                    // =====================
-
-                    const skillsResult =
+                    const skillResult =
                         await Skill.deleteMany({
                             portfolio: portfolioId
                         }, {
                             session
                         });
 
-
                     deletedData.skills =
-                        skillsResult.deletedCount || 0;
+                        skillResult.deletedCount || 0;
 
-
-                    // =====================
-                    // EXPERIENCE
-                    // =====================
 
                     const experienceResult =
                         await Experience.deleteMany({
@@ -462,14 +599,9 @@ const deleteUser = async(
                             session
                         });
 
-
                     deletedData.experiences =
                         experienceResult.deletedCount || 0;
 
-
-                    // =====================
-                    // EDUCATION
-                    // =====================
 
                     const educationResult =
                         await Education.deleteMany({
@@ -478,14 +610,9 @@ const deleteUser = async(
                             session
                         });
 
-
                     deletedData.education =
                         educationResult.deletedCount || 0;
 
-
-                    // =====================
-                    // CERTIFICATES
-                    // =====================
 
                     const certificateResult =
                         await Certificate.deleteMany({
@@ -494,14 +621,9 @@ const deleteUser = async(
                             session
                         });
 
-
                     deletedData.certificates =
                         certificateResult.deletedCount || 0;
 
-
-                    // =====================
-                    // POSTS
-                    // =====================
 
                     const postsResult =
                         await Post.deleteMany({
@@ -510,14 +632,9 @@ const deleteUser = async(
                             session
                         });
 
-
                     deletedData.posts =
                         postsResult.deletedCount || 0;
 
-
-                    // =====================
-                    // PORTFOLIO
-                    // =====================
 
                     const portfolioResult =
                         await Portfolio.deleteOne({
@@ -526,21 +643,15 @@ const deleteUser = async(
                             session
                         });
 
-
                     deletedData.portfolios =
                         portfolioResult.deletedCount || 0;
 
                 }
 
 
-                // =================================
-                // DELETE USER
-                // =================================
-
                 const userResult =
                     await User.deleteOne({
                         _id: user._id,
-
                         role: "user"
                     }, {
                         session
@@ -562,17 +673,18 @@ const deleteUser = async(
 
         };
 
-
     } finally {
 
         await session.endSession();
 
     }
+
 };
 
 
 // ========================================
 // GET ALL PORTFOLIOS
+// OWNER + BASIC DETAILS
 // ========================================
 
 const getAllPortfolios = async() => {
@@ -581,19 +693,22 @@ const getAllPortfolios = async() => {
         await Portfolio.find()
         .populate(
             "owner",
-            "name email isActive"
+            "name email profileImage isActive isEmailVerified"
         )
         .sort({
             createdAt: -1
-        });
+        })
+        .lean();
 
 
     return portfolios;
+
 };
 
 
 // ========================================
 // GET PORTFOLIO BY ID
+// COMPLETE PORTFOLIO
 // ========================================
 
 const getPortfolioById = async(
@@ -612,6 +727,7 @@ const getPortfolioById = async(
         error.statusCode = 400;
 
         throw error;
+
     }
 
 
@@ -621,8 +737,9 @@ const getPortfolioById = async(
         )
         .populate(
             "owner",
-            "name email isActive"
-        );
+            "name email profileImage isActive isEmailVerified createdAt"
+        )
+        .lean();
 
 
     if (!portfolio) {
@@ -635,10 +752,98 @@ const getPortfolioById = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
-    return portfolio;
+    const [
+
+        projects,
+        skills,
+        experiences,
+        education,
+        certificates,
+        posts
+
+    ] = await Promise.all([
+
+        Project.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Skill.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Experience.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Education.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Certificate.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean(),
+
+        Post.find({
+            portfolio: portfolio._id
+        })
+        .sort({
+            order: 1,
+            createdAt: -1
+        })
+        .lean()
+
+    ]);
+
+
+    return {
+
+        portfolio,
+
+        owner: portfolio.owner || null,
+
+        projects,
+
+        skills,
+
+        experiences,
+
+        education,
+
+        certificates,
+
+        posts
+
+    };
+
 };
 
 
@@ -649,33 +854,19 @@ const getPortfolioById = async(
 const getPlatformStatistics = async() => {
 
     const [
-
         totalUsers,
-
         activeUsers,
-
         inactiveUsers,
-
         verifiedUsers,
-
         totalPortfolios,
-
         publishedPortfolios,
-
         totalProjects,
-
         totalSkills,
-
         totalExperiences,
-
         totalEducation,
-
         totalCertificates,
-
         totalPosts,
-
         publishedPosts
-
     ] = await Promise.all([
 
         User.countDocuments({
@@ -725,68 +916,42 @@ const getPlatformStatistics = async() => {
     return {
 
         users: {
-
             total: totalUsers,
-
             active: activeUsers,
-
             inactive: inactiveUsers,
-
             verified: verifiedUsers
-
         },
 
         portfolios: {
-
             total: totalPortfolios,
-
             published: publishedPortfolios,
-
             unpublished: totalPortfolios -
                 publishedPortfolios
-
         },
 
         content: {
-
             projects: totalProjects,
-
             skills: totalSkills,
-
             experiences: totalExperiences,
-
             education: totalEducation,
-
             certificates: totalCertificates,
-
             posts: totalPosts,
-
             publishedPosts
-
         }
 
     };
+
 };
 
 
 export {
-
     getDashboardStats,
-
     getAllUsers,
-
     getUserById,
-
     activateUser,
-
     deactivateUser,
-
     deleteUser,
-
     getAllPortfolios,
-
     getPortfolioById,
-
     getPlatformStatistics
-
 };
