@@ -1,4 +1,10 @@
 import Portfolio from "../../models/portfolio.model.js";
+import Project from "../../models/project.model.js";
+import Skill from "../../models/skill.model.js";
+import Experience from "../../models/experience.model.js";
+import Education from "../../models/education.model.js";
+import Certificate from "../../models/certificate.model.js";
+import Post from "../../models/post.model.js";
 
 
 // ========================================
@@ -77,9 +83,11 @@ const generateUniqueUsername = async(
             )}${suffix}`;
 
         counter++;
+
     }
 
     return username;
+
 };
 
 
@@ -100,7 +108,9 @@ const generateUniqueSlug = async(
         "portfolio";
 
     if (base.length < 3) {
+
         base = "portfolio";
+
     }
 
     let slug = base;
@@ -122,9 +132,11 @@ const generateUniqueSlug = async(
             )}${suffix}`;
 
         counter++;
+
     }
 
     return slug;
+
 };
 
 
@@ -155,6 +167,7 @@ const createPortfolio = async(
         error.statusCode = 409;
 
         throw error;
+
     }
 
 
@@ -269,6 +282,7 @@ const createPortfolio = async(
 
 
     return portfolio;
+
 };
 
 
@@ -298,10 +312,12 @@ const getMyPortfolio = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
     return portfolio;
+
 };
 
 
@@ -312,6 +328,10 @@ const getMyPortfolio = async(
 const getPublicPortfolio = async(
     slug
 ) => {
+
+    // ====================================
+    // GET PUBLISHED PORTFOLIO
+    // ====================================
 
     const portfolio =
         await Portfolio.findOne({
@@ -337,10 +357,99 @@ const getPublicPortfolio = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
-    return portfolio;
+    // ====================================
+    // GET ALL PUBLIC CONTENT
+    // ====================================
+
+    const [
+        projects,
+        skills,
+        experiences,
+        education,
+        certificates,
+        posts
+    ] = await Promise.all([
+
+        Project.find({
+            portfolio: portfolio._id,
+            isPublished: true
+        }).sort({
+            order: 1,
+            createdAt: -1
+        }),
+
+        Skill.find({
+            portfolio: portfolio._id,
+            isPublished: true
+        }).sort({
+            order: 1,
+            createdAt: -1
+        }),
+
+        Experience.find({
+            portfolio: portfolio._id,
+            isPublished: true
+        }).sort({
+            order: 1,
+            startDate: -1,
+            createdAt: -1
+        }),
+
+        Education.find({
+            portfolio: portfolio._id,
+            isPublished: true
+        }).sort({
+            order: 1,
+            startDate: -1,
+            createdAt: -1
+        }),
+
+        Certificate.find({
+            portfolio: portfolio._id,
+            isPublished: true
+        }).sort({
+            order: 1,
+            createdAt: -1
+        }),
+
+        Post.find({
+            portfolio: portfolio._id,
+            isPublished: true
+        }).sort({
+            order: 1,
+            publishedAt: -1,
+            createdAt: -1
+        })
+
+    ]);
+
+
+    // ====================================
+    // RETURN COMPLETE PUBLIC PORTFOLIO
+    // ====================================
+
+    return {
+
+        portfolio,
+
+        projects,
+
+        skills,
+
+        experiences,
+
+        education,
+
+        certificates,
+
+        posts
+
+    };
+
 };
 
 
@@ -368,6 +477,7 @@ const updatePortfolio = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
@@ -402,11 +512,13 @@ const updatePortfolio = async(
             error.statusCode = 409;
 
             throw error;
+
         }
 
 
         portfolio.username =
             data.username.toLowerCase();
+
     }
 
 
@@ -441,11 +553,13 @@ const updatePortfolio = async(
             error.statusCode = 409;
 
             throw error;
+
         }
 
 
         portfolio.slug =
             data.slug.toLowerCase();
+
     }
 
 
@@ -456,35 +570,53 @@ const updatePortfolio = async(
     const allowedFields = [
 
         "title",
+
         "headline",
+
         "bio",
+
         "profileImage",
 
         "location",
+
         "email",
+
         "phone",
 
         "github",
+
         "linkedin",
+
         "twitter",
+
         "instagram",
+
         "youtube",
+
         "website",
 
         "resume",
 
         "theme",
+
         "template",
 
         "customization",
 
         "showAboutSection",
+
         "showContactSection",
+
         "showProjectsSection",
+
         "showSkillsSection",
+
         "showExperienceSection",
+
         "showEducationSection",
+
         "showCertificatesSection",
+
         "showPostsSection",
 
         "seo"
@@ -508,6 +640,7 @@ const updatePortfolio = async(
                 data[field];
 
         }
+
     }
 
 
@@ -515,6 +648,7 @@ const updatePortfolio = async(
 
 
     return portfolio;
+
 };
 
 
@@ -541,6 +675,7 @@ const publishPortfolio = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
@@ -550,6 +685,7 @@ const publishPortfolio = async(
 
 
     return portfolio;
+
 };
 
 
@@ -576,6 +712,7 @@ const unpublishPortfolio = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
@@ -585,6 +722,7 @@ const unpublishPortfolio = async(
 
 
     return portfolio;
+
 };
 
 
@@ -611,6 +749,7 @@ const deletePortfolio = async(
         error.statusCode = 404;
 
         throw error;
+
     }
 
 
@@ -622,6 +761,7 @@ const deletePortfolio = async(
     return {
         message: "Portfolio deleted successfully"
     };
+
 };
 
 
