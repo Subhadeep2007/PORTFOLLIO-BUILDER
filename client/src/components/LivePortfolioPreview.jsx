@@ -1875,7 +1875,8 @@ const PostCard = ({
 
 const LivePortfolioPreview = ({
     form,
-    user
+    user,
+    publicData
 }) => {
     const [
         projects,
@@ -1933,6 +1934,75 @@ const LivePortfolioPreview = ({
 
     useEffect(() => {
         let mounted = true;
+
+        if (publicData) {
+            setProjects(
+                toArray(
+                    publicData.projects
+                ).filter(
+                    (item) =>
+                        item &&
+                        item.isPublished === true
+                )
+            );
+
+            setSkills(
+                toArray(
+                    publicData.skills
+                ).filter(
+                    (item) =>
+                        item &&
+                        item.isPublished === true
+                )
+            );
+
+            setExperiences(
+                toArray(
+                    publicData.experiences
+                ).filter(
+                    (item) =>
+                        item &&
+                        item.isPublished === true
+                )
+            );
+
+            setEducation(
+                toArray(
+                    publicData.education
+                ).filter(
+                    (item) =>
+                        item &&
+                        item.isPublished === true
+                )
+            );
+
+            setCertificates(
+                toArray(
+                    publicData.certificates
+                ).filter(
+                    (item) =>
+                        item &&
+                        item.isPublished === true
+                )
+            );
+
+            setPosts(
+                toArray(
+                    publicData.posts
+                ).filter(
+                    (item) =>
+                        item &&
+                        item.isPublished === true
+                )
+            );
+
+            setDataError("");
+            setLoading(false);
+
+            return () => {
+                mounted = false;
+            };
+        }
 
         const loadData = async () => {
             try {
@@ -2094,7 +2164,7 @@ const LivePortfolioPreview = ({
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [publicData]);
 
     // ========================================
     // SORT
