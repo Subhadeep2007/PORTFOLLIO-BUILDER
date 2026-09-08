@@ -1876,7 +1876,8 @@ const PostCard = ({
 const LivePortfolioPreview = ({
     form,
     user,
-    publicData
+    publicData,
+     isPublic = false
 }) => {
     const [
         projects,
@@ -2816,13 +2817,15 @@ const LivePortfolioPreview = ({
                         </p>
 
                         <h2
-                            className="
-                                mt-3
-                                text-4xl
-                                font-black
-                                tracking-tight
-                                sm:text-5xl
-                            "
+                            className={`
+        mt-3
+        text-4xl
+        font-black
+        tracking-tight
+        sm:text-5xl
+        text-white
+        ${isPublic ? "animate-pulse" : ""}
+    `}
                         >
                             {name}
                         </h2>
