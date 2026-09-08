@@ -321,6 +321,7 @@ const PublicPortfolio = () => {
                         "Portfolio"
                 }}
                 publicData={data}
+                isPublic={true}
             />
 
         </main>
