@@ -143,9 +143,29 @@ export const PortfolioProvider = ({
                 );
 
 
-            const createdPortfolio =
+            /*
+             * API helpers may return either:
+             *
+             * response.data
+             * response.portfolio
+             *
+             * or the portfolio object directly.
+             *
+             * Normalize all supported shapes
+             * before updating context state.
+             */
+
+            const responseData =
                 response?.data ||
                 response?.portfolio ||
+                response ||
+                null;
+
+
+            const createdPortfolio =
+                responseData?.data ||
+                responseData?.portfolio ||
+                responseData ||
                 null;
 
 
@@ -192,9 +212,28 @@ export const PortfolioProvider = ({
                 );
 
 
-            const updatedPortfolio =
+            /*
+             * Normalize the API response.
+             *
+             * This is important for SEO because
+             * the complete updated portfolio,
+             * including seo.metaTitle,
+             * seo.metaDescription,
+             * seo.keywords and seo.ogImage,
+             * must remain in PortfolioContext.
+             */
+
+            const responseData =
                 response?.data ||
                 response?.portfolio ||
+                response ||
+                null;
+
+
+            const updatedPortfolio =
+                responseData?.data ||
+                responseData?.portfolio ||
+                responseData ||
                 null;
 
 

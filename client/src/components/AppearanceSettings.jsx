@@ -477,6 +477,157 @@ const AppearanceSettings = ({
 
             </div>
 
+
+            {/* ========================================
+                SEO SETTINGS
+            ======================================== */}
+
+            <div>
+                <div className="mb-3">
+                    <p className="text-sm font-semibold text-slate-300">
+                        SEO Settings
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-600">
+                        Optimize your portfolio for search engines and social sharing.
+                    </p>
+                </div>
+
+                <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+
+                    <div>
+                        <label className="mb-2 block text-[11px] font-medium text-slate-400">
+                            Meta Title
+                        </label>
+
+                        <input
+                            type="text"
+                            value={
+                                form.seo && form.seo.metaTitle
+                                    ? form.seo.metaTitle
+                                    : ""
+                            }
+                            onChange={(event) =>
+                                onNestedChange(
+                                    "seo",
+                                    "metaTitle",
+                                    event.target.value
+                                )
+                            }
+                            placeholder="Your Name | Full Stack Developer"
+                            maxLength={160}
+                            className="w-full rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/30"
+                        />
+
+                        <p className="mt-1 text-right text-[10px] text-slate-600">
+                            {
+                                form.seo && form.seo.metaTitle
+                                    ? form.seo.metaTitle.length
+                                    : 0
+                            }/160
+                        </p>
+                    </div>
+
+
+                    <div>
+                        <label className="mb-2 block text-[11px] font-medium text-slate-400">
+                            Meta Description
+                        </label>
+
+                        <textarea
+                            value={
+                                form.seo && form.seo.metaDescription
+                                    ? form.seo.metaDescription
+                                    : ""
+                            }
+                            onChange={(event) =>
+                                onNestedChange(
+                                    "seo",
+                                    "metaDescription",
+                                    event.target.value
+                                )
+                            }
+                            placeholder="A short description of your portfolio..."
+                            maxLength={320}
+                            rows={4}
+                            className="w-full resize-none rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/30"
+                        />
+
+                        <p className="mt-1 text-right text-[10px] text-slate-600">
+                            {
+                                form.seo && form.seo.metaDescription
+                                    ? form.seo.metaDescription.length
+                                    : 0
+                            }/320
+                        </p>
+                    </div>
+
+
+                    <div>
+                        <label className="mb-2 block text-[11px] font-medium text-slate-400">
+                            Keywords
+                        </label>
+
+                        <input
+                            type="text"
+                            value={
+                                form.seo && Array.isArray(form.seo.keywords)
+                                    ? form.seo.keywords.join(", ")
+                                    : ""
+                            }
+                            onChange={(event) => {
+                                const keywords = event.target.value
+                                    .split(",")
+                                    .map((keyword) => keyword.trim())
+                                    .filter(Boolean);
+
+                                onNestedChange(
+                                    "seo",
+                                    "keywords",
+                                    keywords
+                                );
+                            }}
+                            placeholder="javascript, react, node.js, full stack developer"
+                            className="w-full rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/30"
+                        />
+
+                        <p className="mt-1 text-[10px] text-slate-600">
+                            Separate keywords with commas.
+                        </p>
+                    </div>
+
+
+                    <div>
+                        <label className="mb-2 block text-[11px] font-medium text-slate-400">
+                            Social Preview Image URL
+                        </label>
+
+                        <input
+                            type="url"
+                            value={
+                                form.seo && form.seo.ogImage
+                                    ? form.seo.ogImage
+                                    : ""
+                            }
+                            onChange={(event) =>
+                                onNestedChange(
+                                    "seo",
+                                    "ogImage",
+                                    event.target.value
+                                )
+                            }
+                            placeholder="https://example.com/og-image.png"
+                            className="w-full rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/30"
+                        />
+
+                        <p className="mt-1 text-[10px] text-slate-600">
+                            Image shown when your portfolio link is shared.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
     );
 };
