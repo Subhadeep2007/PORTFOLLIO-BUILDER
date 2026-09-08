@@ -736,10 +736,38 @@ const PortfolioEditor = () => {
 
         try {
 
-            await save(
-                buildPayload(form)
-            );
+            const savedPortfolio =
+                await save(
+                    buildPayload(form)
+                );
 
+            const savedData =
+                savedPortfolio && savedPortfolio.data
+                    ? savedPortfolio.data
+                    : savedPortfolio;
+
+            const updatedPortfolio =
+                savedData && savedData.data
+                    ? savedData.data
+                    : savedData;
+
+            if (
+                updatedPortfolio &&
+                typeof updatedPortfolio === "object"
+            ) {
+                setForm((previous) => ({
+                    ...previous,
+                    ...updatedPortfolio,
+                    customization: {
+                        ...previous.customization,
+                        ...(updatedPortfolio.customization || {})
+                    },
+                    seo: {
+                        ...previous.seo,
+                        ...(updatedPortfolio.seo || {})
+                    }
+                }));
+            }
 
             setMessage(
                 "Portfolio saved successfully."
