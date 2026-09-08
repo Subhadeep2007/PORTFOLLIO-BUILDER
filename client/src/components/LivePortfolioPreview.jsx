@@ -328,7 +328,25 @@ const ProjectCard = ({
                     />
                 </div>
             ) : null}
-
+{project.featured ? (
+    <span className="
+        absolute
+        right-3
+        top-3
+        rounded-full
+        border
+        border-yellow-400/20
+        bg-black/60
+        px-3
+        py-1.5
+        text-xs
+        font-medium
+        text-yellow-300
+        backdrop-blur
+    ">
+        ★ Featured
+    </span>
+) : null}
             {/* CONTENT */}
 
             <div className="p-5">
