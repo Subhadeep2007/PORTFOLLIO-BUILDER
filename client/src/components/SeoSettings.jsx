@@ -1,60 +1,19 @@
-import { useEffect, useState } from "react";
-
 const SeoSettings = ({
     form,
     onNestedChange,
     fieldErrors
 }) => {
 
-    const [keywordsText, setKeywordsText] =
-        useState("");
-
-
     // ========================================
-    // LOAD KEYWORDS FROM BACKEND
+    // KEYWORDS SAVE
     // ========================================
 
-    useEffect(() => {
+    const saveKeywords = (event) => {
 
-        const keywords =
-            Array.isArray(form.seo.keywords)
-                ? form.seo.keywords
-                : [];
-
-        setKeywordsText(
-            keywords.join(", ")
-        );
-
-    }, [form.seo.keywords]);
-
-
-    // ========================================
-    // KEYWORDS CHANGE
-    // ========================================
-
-    const handleKeywordsChange = (event) => {
-
-        setKeywordsText(
-            event.target.value
-        );
-
-    };
-
-
-    // ========================================
-    // SAVE KEYWORDS
-    // ========================================
-
-    const saveKeywords = () => {
-
-        const keywords =
-            keywordsText
-                .split(",")
-                .map((keyword) =>
-                    keyword.trim()
-                )
-                .filter(Boolean);
-
+        const keywords = event.target.value
+            .split(",")
+            .map((keyword) => keyword.trim())
+            .filter(Boolean);
 
         onNestedChange(
             "seo",
@@ -207,32 +166,23 @@ const SeoSettings = ({
                     Keywords
                 </label>
 
-
                 <input
                     type="text"
-                    value={keywordsText}
-                    onChange={
-                        handleKeywordsChange
+                    value={
+                        Array.isArray(form.seo.keywords)
+                            ? form.seo.keywords.join(", ")
+                            : ""
                     }
-                    onBlur={saveKeywords}
+                    onChange={saveKeywords}
                     placeholder="react, nodejs, mongodb, express"
                     className="w-full rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
                 />
 
-
-                <div className="mt-2 flex items-center justify-between">
+                <div className="mt-2">
 
                     <p className="text-[11px] leading-5 text-slate-600">
                         Example: react, nodejs, mongodb
                     </p>
-
-                    <button
-                        type="button"
-                        onClick={saveKeywords}
-                        className="text-[10px] font-semibold text-cyan-400 transition hover:text-cyan-300"
-                    >
-                        Apply
-                    </button>
 
                 </div>
 
@@ -241,26 +191,27 @@ const SeoSettings = ({
                     KEYWORD PREVIEW
                 ================================== */}
 
-                {form.seo.keywords.length > 0 && (
+                {Array.isArray(form.seo.keywords) &&
+                    form.seo.keywords.length > 0 && (
 
-                    <div className="mt-3 flex flex-wrap gap-2">
+                        <div className="mt-3 flex flex-wrap gap-2">
 
-                        {form.seo.keywords.map(
-                            (keyword, index) => (
+                            {form.seo.keywords.map(
+                                (keyword, index) => (
 
-                                <span
-                                    key={`${keyword}-${index}`}
-                                    className="rounded-full border border-cyan-400/10 bg-cyan-400/5 px-2.5 py-1 text-[10px] text-cyan-300"
-                                >
-                                    {keyword}
-                                </span>
+                                    <span
+                                        key={`${keyword}-${index}`}
+                                        className="rounded-full border border-cyan-400/10 bg-cyan-400/5 px-2.5 py-1 text-[10px] text-cyan-300"
+                                    >
+                                        {keyword}
+                                    </span>
 
-                            )
-                        )}
+                                )
+                            )}
 
-                    </div>
+                        </div>
 
-                )}
+                    )}
 
             </div>
 
@@ -288,7 +239,7 @@ const SeoSettings = ({
                         )
                     }
                     placeholder="https://..."
-                    className="w-full rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40 focus:ring-cyan-400/20"
+                    className="w-full rounded-xl border border-white/10 bg-[#070b16] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-400/40 focus:ring-1 focus:ring-cyan-400/20"
                 />
 
             </div>
