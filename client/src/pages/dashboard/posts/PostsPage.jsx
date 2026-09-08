@@ -2161,26 +2161,7 @@ function PostCard({
                     ) : null}
                 </div>
 
-                {/* VIEWS */}
-
-                <div
-                    className="
-                        mt-4
-                        flex
-                        items-center
-                        justify-between
-                        text-xs
-                        text-slate-500
-                    "
-                >
-                    <span>
-                        👁 {post.views || 0} views
-                    </span>
-
-                    <span>
-                        Order {post.order || 0}
-                    </span>
-                </div>
+                
 
                 {/* ACTIONS */}
 
