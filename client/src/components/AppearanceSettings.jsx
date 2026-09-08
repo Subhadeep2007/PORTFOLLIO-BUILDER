@@ -1,16 +1,202 @@
 const AppearanceSettings = ({
     form,
+    onChange,
     onNestedChange
 }) => {
 
+    const templates = [
+        {
+            id: "modern",
+            name: "Modern",
+            description: "Clean, premium and balanced",
+            icon: "✦"
+        },
+        {
+            id: "minimal",
+            name: "Minimal",
+            description: "Simple, elegant and focused",
+            icon: "◌"
+        },
+        {
+            id: "developer",
+            name: "Developer",
+            description: "Code-inspired developer style",
+            icon: "</>"
+        },
+        {
+            id: "creative",
+            name: "Creative",
+            description: "Bold, expressive and artistic",
+            icon: "✧"
+        }
+    ];
+
+
     return (
         <div className="space-y-6">
+
+            {/* ========================================
+                TEMPLATE SELECTOR
+            ======================================== */}
+
+            <div>
+
+                <p className="mb-3 text-sm font-semibold text-slate-300">
+                    Portfolio Template
+                </p>
+
+                <div
+                    className="
+                        rounded-2xl
+                        border
+                        border-white/10
+                        bg-white/[0.02]
+                        p-4
+                    "
+                >
+
+                    <p className="text-sm font-semibold text-white">
+                        Choose a Template
+                    </p>
+
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Select the visual style for your public portfolio.
+                    </p>
+
+
+                    <div className="mt-5 grid grid-cols-1 gap-3">
+
+                        {templates.map((template) => {
+
+                            const isSelected =
+                                form.template === template.id;
+
+
+                            return (
+                                <button
+                                    key={template.id}
+                                    type="button"
+                                    onClick={() =>
+                                        onChange(
+                                            "template",
+                                            template.id
+                                        )
+                                    }
+                                    className={`
+                                        group
+                                        relative
+                                        w-full
+                                        rounded-2xl
+                                        border
+                                        p-4
+                                        text-left
+                                        transition
+                                        duration-200
+                                        ${
+                                            isSelected
+                                                ? "border-cyan-400/50 bg-cyan-400/10 shadow-[0_0_25px_rgba(34,211,238,0.08)]"
+                                                : "border-white/10 bg-[#070b16] hover:border-cyan-400/20 hover:bg-white/[0.04]"
+                                        }
+                                    `}
+                                >
+
+                                    <div className="flex items-center gap-3">
+
+                                        <div
+                                            className={`
+                                                flex
+                                                h-11
+                                                w-11
+                                                shrink-0
+                                                items-center
+                                                justify-center
+                                                rounded-xl
+                                                border
+                                                text-sm
+                                                font-bold
+                                                transition
+                                                ${
+                                                    isSelected
+                                                        ? "border-cyan-400/30 bg-cyan-400/10 text-cyan-300"
+                                                        : "border-white/10 bg-white/[0.03] text-slate-400 group-hover:text-cyan-300"
+                                                }
+                                            `}
+                                        >
+                                            {template.icon}
+                                        </div>
+
+
+                                        <div className="min-w-0 flex-1">
+
+                                            <div className="flex items-center justify-between gap-3">
+
+                                                <p
+                                                    className={`
+                                                        text-sm
+                                                        font-semibold
+                                                        ${
+                                                            isSelected
+                                                                ? "text-cyan-300"
+                                                                : "text-white"
+                                                        }
+                                                    `}
+                                                >
+                                                    {template.name}
+                                                </p>
+
+
+                                                {isSelected ? (
+
+                                                    <span
+                                                        className="
+                                                            shrink-0
+                                                            rounded-full
+                                                            border
+                                                            border-cyan-400/20
+                                                            bg-cyan-400/10
+                                                            px-2
+                                                            py-1
+                                                            text-[9px]
+                                                            font-bold
+                                                            uppercase
+                                                            tracking-[0.16em]
+                                                            text-cyan-300
+                                                        "
+                                                    >
+                                                        Selected
+                                                    </span>
+
+                                                ) : null}
+
+                                            </div>
+
+
+                                            <p className="mt-1 text-xs leading-5 text-slate-500">
+                                                {template.description}
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </button>
+                            );
+
+                        })}
+
+                    </div>
+
+                </div>
+
+            </div>
+
 
             {/* ========================================
                 CUSTOM COLORS
             ======================================== */}
 
             <div>
+
                 <p className="mb-3 text-sm font-semibold text-slate-300">
                     Portfolio Colors
                 </p>
@@ -253,6 +439,7 @@ const AppearanceSettings = ({
                                 }}
                             />
 
+
                             <div
                                 className="
                                     h-10
@@ -267,6 +454,7 @@ const AppearanceSettings = ({
                                         "#3b82f6"
                                 }}
                             />
+
 
                             <div className="ml-2">
 

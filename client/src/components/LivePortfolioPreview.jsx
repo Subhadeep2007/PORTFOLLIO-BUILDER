@@ -2343,9 +2343,26 @@ const LivePortfolioPreview = ({
         (item) => item.href
     );
 
+    // ========================================
+    // SELECTED TEMPLATE
+    // Existing portfolio structure stays the same.
+    // Only the visual presentation changes here.
+    // ========================================
+
+    const selectedTemplate =
+        [
+            "modern",
+            "minimal",
+            "developer",
+            "creative"
+        ].includes(form?.template)
+            ? form.template
+            : "modern";
+
     return (
         <section
-            className="
+            data-template={selectedTemplate}
+            className={`
                 min-w-0
                 rounded-3xl
                 border
@@ -2354,8 +2371,157 @@ const LivePortfolioPreview = ({
                 p-3
                 shadow-2xl
                 sm:p-4
-            "
+                portfolio-template-${selectedTemplate}
+            `}
         >
+            <style>{`
+                /* ========================================
+                   TEMPLATE VISUAL SYSTEM
+                   Modern = existing UI unchanged
+                   Minimal = clean editorial layout
+                   Developer = terminal / code aesthetic
+                   Creative = bold glass / gradient aesthetic
+                ======================================== */
+
+                .portfolio-template-modern {
+                    --template-surface: #070b16;
+                    --template-inner: #020712;
+                }
+
+                .portfolio-template-minimal {
+                    background: #f8fafc !important;
+                    border-color: #e2e8f0 !important;
+                    color: #0f172a !important;
+                    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08) !important;
+                }
+
+                .portfolio-template-minimal > div:last-of-type {
+                    background: #ffffff !important;
+                    border-color: #e2e8f0 !important;
+                    border-radius: 1rem !important;
+                }
+
+                .portfolio-template-minimal nav {
+                    background: #ffffff !important;
+                    border-color: #e2e8f0 !important;
+                }
+
+                .portfolio-template-minimal h1,
+                .portfolio-template-minimal h2,
+                .portfolio-template-minimal h3,
+                .portfolio-template-minimal p,
+                .portfolio-template-minimal span,
+                .portfolio-template-minimal li {
+                    color: #0f172a;
+                }
+
+                .portfolio-template-minimal .text-slate-300,
+                .portfolio-template-minimal .text-slate-400 {
+                    color: #475569 !important;
+                }
+
+                .portfolio-template-minimal .text-slate-500,
+                .portfolio-template-minimal .text-slate-600 {
+                    color: #64748b !important;
+                }
+
+                .portfolio-template-minimal article,
+                .portfolio-template-minimal nav a,
+                .portfolio-template-minimal section > div > a,
+                .portfolio-template-minimal section > div > div {
+                    border-color: #e2e8f0 !important;
+                    background: #ffffff !important;
+                }
+
+                .portfolio-template-minimal img {
+                    border-radius: 0.75rem;
+                }
+
+                .portfolio-template-developer {
+                    background: #050805 !important;
+                    border-color: rgba(74, 222, 128, 0.2) !important;
+                    box-shadow: 0 0 60px rgba(74, 222, 128, 0.05) !important;
+                }
+
+                .portfolio-template-developer > div:last-of-type {
+                    background: #020602 !important;
+                    border-color: rgba(74, 222, 128, 0.18) !important;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+                }
+
+                .portfolio-template-developer nav {
+                    background: #030803 !important;
+                    border-color: rgba(74, 222, 128, 0.16) !important;
+                }
+
+                .portfolio-template-developer nav::before {
+                    content: "root@portfolio:~$";
+                    margin-right: 1rem;
+                    color: #4ade80;
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.08em;
+                }
+
+                .portfolio-template-developer article {
+                    border-radius: 0.5rem !important;
+                    border-color: rgba(74, 222, 128, 0.14) !important;
+                    background: rgba(74, 222, 128, 0.025) !important;
+                }
+
+                .portfolio-template-developer section {
+                    background-image: linear-gradient(
+                        rgba(74, 222, 128, 0.025) 1px,
+                        transparent 1px
+                    ), linear-gradient(
+                        90deg,
+                        rgba(74, 222, 128, 0.025) 1px,
+                        transparent 1px
+                    );
+                    background-size: 24px 24px;
+                }
+
+                .portfolio-template-creative {
+                    background: linear-gradient(135deg, #090d1f, #120c24 48%, #071525) !important;
+                    border-color: rgba(168, 85, 247, 0.25) !important;
+                    box-shadow: 0 30px 80px rgba(124, 58, 237, 0.12) !important;
+                }
+
+                .portfolio-template-creative > div:last-of-type {
+                    background:
+                        radial-gradient(circle at 10% 10%, rgba(34, 211, 238, 0.08), transparent 26%),
+                        radial-gradient(circle at 90% 20%, rgba(168, 85, 247, 0.10), transparent 28%),
+                        #030615 !important;
+                    border-color: rgba(168, 85, 247, 0.18) !important;
+                }
+
+                .portfolio-template-creative nav {
+                    background: rgba(255, 255, 255, 0.025) !important;
+                    backdrop-filter: blur(16px);
+                    border-color: rgba(255, 255, 255, 0.08) !important;
+                }
+
+                .portfolio-template-creative article {
+                    border-radius: 1.5rem !important;
+                    background: rgba(255, 255, 255, 0.035) !important;
+                    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+                }
+
+                .portfolio-template-creative #preview-home h2 {
+                    font-size: clamp(2.75rem, 6vw, 5.5rem);
+                    line-height: 0.95;
+                    letter-spacing: -0.055em;
+                }
+
+                .portfolio-template-creative section > div {
+                    transition: transform 220ms ease, border-color 220ms ease;
+                }
+
+                .portfolio-template-creative article:hover {
+                    transform: translateY(-4px) rotate(-0.15deg);
+                }
+            `}</style>
+
             {/* PREVIEW LABEL */}
 
             <div
