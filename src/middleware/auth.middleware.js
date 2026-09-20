@@ -11,27 +11,27 @@ const authMiddleware = (
         const authHeader =
             req.headers.authorization;
 
-        if (!authHeader) {
+        const token =
+            authHeader?.startsWith("Bearer ")
+                ? authHeader.split(" ")[1]
+                : req.cookies.accessToken;
+
+        if (!token) {
             return res.status(401).json({
                 success: false,
                 message: "Access token is required"
             });
         }
 
-        const parts =
-            authHeader.split(" ");
-
         if (
-            parts.length !== 2 ||
-            parts[0] !== "Bearer"
+            authHeader &&
+            !authHeader.startsWith("Bearer ")
         ) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid authorization format"
             });
         }
-
-        const token = parts[1];
 
         const decoded =
             jwt.verify(

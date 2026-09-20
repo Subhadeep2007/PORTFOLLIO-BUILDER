@@ -139,6 +139,23 @@ const login = async(
             }
         );
 
+        res.cookie(
+            "accessToken",
+            result.accessToken, {
+                httpOnly: true,
+
+                secure: process.env.NODE_ENV ===
+                    "production",
+
+                sameSite: "strict",
+
+                maxAge: 24 *
+                    60 *
+                    60 *
+                    1000
+            }
+        );
+
         return res.status(200).json({
             success: true,
             message: "Login successful",
@@ -204,6 +221,23 @@ const adminLogin = async(
             }
         );
 
+        res.cookie(
+            "accessToken",
+            result.accessToken, {
+                httpOnly: true,
+
+                secure: process.env.NODE_ENV ===
+                    "production",
+
+                sameSite: "strict",
+
+                maxAge: 24 *
+                    60 *
+                    60 *
+                    1000
+            }
+        );
+
         return res.status(200).json({
             success: true,
             message: "Admin login successful",
@@ -236,6 +270,23 @@ const refreshToken = async(
 
         const result =
             await refreshAccessToken(token);
+
+        res.cookie(
+            "accessToken",
+            result.accessToken, {
+                httpOnly: true,
+
+                secure: process.env.NODE_ENV ===
+                    "production",
+
+                sameSite: "strict",
+
+                maxAge: 24 *
+                    60 *
+                    60 *
+                    1000
+            }
+        );
 
         return res.status(200).json({
             success: true,
@@ -301,6 +352,17 @@ const logout = async(
 
         res.clearCookie(
             "refreshToken", {
+                httpOnly: true,
+
+                secure: process.env.NODE_ENV ===
+                    "production",
+
+                sameSite: "strict"
+            }
+        );
+
+        res.clearCookie(
+            "accessToken", {
                 httpOnly: true,
 
                 secure: process.env.NODE_ENV ===
